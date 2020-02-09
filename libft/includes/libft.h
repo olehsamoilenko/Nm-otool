@@ -15,6 +15,7 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <inttypes.h>
+# include <stdbool.h>
 # include "get_next_line.h"
 # include "printf.h"
 
@@ -25,11 +26,11 @@ typedef struct		s_list
 	struct s_list	*next;
 }					t_list;
 
-typedef enum		e_bool
-{
-	false,
-	true
-}					t_bool;
+// typedef enum		e_bool
+// {
+// 	false,
+// 	true
+// }					t_bool;
 
 void				*ft_memset(void *b, int c, size_t len);
 void				ft_bzero(void *s, size_t n);
@@ -101,6 +102,6 @@ char				**ft_chartable(int x, int y);
 int					ft_abs(int n);
 int					ft_arrlen(char **arr);
 int					ft_char_count(char c, char *line);
-void                ft_print_hex(unsigned long num, t_bool print_0x); // TODO: libft cherry-pick add and update
+void                ft_print_hex(unsigned long num, bool print_0x); // TODO: libft cherry-pick add and update
 
 #endif

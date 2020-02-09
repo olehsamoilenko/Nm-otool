@@ -64,9 +64,9 @@ char		*ft_itoa_base(uintmax_t num, int base, int letters)
 	return (res);
 }
 
-void        ft_print_hex(unsigned long num, t_bool print_0x)
+void        ft_print_hex(unsigned long num, bool print_0x)
 {
-    static t_bool start = true;
+    static bool start = true;
 
     if (start)
     {
