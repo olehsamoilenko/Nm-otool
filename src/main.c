@@ -15,11 +15,16 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
+# define SWAP_16(x) ((((x) & 0xff00U) >> 8U) | (((x) & 0x00ffU) << 8U))
+# define SWAP_32(x) ((SWAP_16(x) << 16U) | (SWAP_16((x) >> 16U)))
+# define SWAP_64(x) ((SWAP_32(x) << 32U) | (SWAP_32((x) >> 32U)))
+
 typedef struct	s_data
 {
 	void *start;
 	size_t len;
 	bool is64;
+	bool cigam;
 }				t_data;
 
 void *get(t_data data, size_t offset, size_t size)
@@ -85,7 +90,7 @@ int parse_symbol(t_data *data, size_t sym_size, uint32_t offset, uint32_t stroff
 	if (str == NULL)
 		return (EXIT_FAILURE);
 
-	ft_printf("%s\n", str);
+	ft_printf("SYMBOL: %s\n", str);
 
 	return (EXIT_SUCCESS);
 }
@@ -107,13 +112,15 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset)
 		if (sym_cmd == NULL)
 			return (EXIT_FAILURE);
 		uint32_t nsyms = sym_cmd->nsyms;
+		
+		ft_printf("PARSE SYMTAB nsyms: %d\n", nsyms);
 
 		const size_t sym_size = data->is64	? sizeof(struct nlist_64)
 											: sizeof(struct nlist);
 		int new_offset = 0; // replace with offset
-		while (nsyms)
+		while (nsyms) // check nsyms
 		{
-			int res = parse_symbol(data, sym_size, sym_cmd->symoff + new_offset, sym_cmd->stroff);
+			int res = parse_symbol(data, sym_size, sym_cmd->symoff + new_offset, sym_cmd->stroff); // check offset
 			if (res == EXIT_FAILURE)
 				return (EXIT_FAILURE);
 
@@ -125,10 +132,10 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset)
 	return (EXIT_SUCCESS);
 }
 
-int parse_mach_o(t_data *data)
+int parse_mach_o(t_data *data, uint32_t offset)
 {
 	size_t header_size = data->is64 ? sizeof(struct mach_header_64) : sizeof(struct mach_header);
-	void *header = get(*data, 0, header_size);
+	void *header = get(*data, offset, header_size);
 	if (header == NULL)
 		return (EXIT_FAILURE);
 	uint32_t ncmds = data->is64	? ((struct mach_header_64 *)header)->ncmds
@@ -136,9 +143,8 @@ int parse_mach_o(t_data *data)
 	
 	ft_printf("ncmds: %d\n", ncmds);
 
-	int offset = header_size;
+	offset += header_size;
 
-	
 	while (ncmds)
 	{
 		struct load_command *lc = get(*data, offset, sizeof(struct load_command));
@@ -154,6 +160,88 @@ int parse_mach_o(t_data *data)
 	}
 
 	return (EXIT_SUCCESS);
+}
+
+int parse_object(t_data *data, uint32_t offset);
+
+int parse_fat(t_data *data)
+{
+	// Nm only: filename
+	struct fat_header *header = get(*data, 0, sizeof(struct fat_header));
+	if (header == NULL)
+		return (EXIT_FAILURE);
+	
+	uint32_t narchs = data->cigam ? SWAP_32(header->nfat_arch)
+								  : header->nfat_arch;
+	ft_printf("PARSE FAT narchs: %d\n", narchs);
+	
+	uint32_t offset = sizeof(struct fat_header);
+	uint32_t arch_size = data->is64 ? sizeof(struct fat_arch_64)
+									: sizeof(struct fat_arch);
+									
+	bool cigam = data->cigam;
+	bool is64 = data->is64;
+	int res = EXIT_FAILURE;
+	while (narchs)
+	{
+		void *arch = get(*data, offset, arch_size);
+		if (arch == NULL)
+			return (EXIT_FAILURE);
+		
+		data->cigam = cigam;
+		data->is64 = is64;
+		
+		uint32_t obj_offset = data->is64 ? ((struct fat_arch_64 *)arch)->offset
+										 : ((struct fat_arch *)arch)->offset;
+		if (data->cigam)
+			obj_offset = SWAP_32(obj_offset); // TODO: 64
+		
+		ft_printf("arch offset: %d\n", obj_offset);
+		res = parse_object(data, obj_offset);
+		
+		offset += arch_size;
+		narchs--;
+	}
+
+	return (res);
+}
+
+int parse_object(t_data *data, uint32_t offset)
+{
+	int res = EXIT_FAILURE;
+	
+	uint32_t magic = *(uint32_t *)get(*data, offset, sizeof(uint32_t));
+
+	if (!magic)
+	{
+		ft_printf("bad magic\n");
+	}
+	else if (magic == MH_MAGIC_64)
+	{
+		ft_printf("MH_MAGIC_64\n");
+		data->is64 = true;
+		data->cigam = false;
+		res = parse_mach_o(data, offset);
+	}
+	else if (magic == FAT_MAGIC)
+	{
+		ft_printf("FAT_MAGIC\n");
+	}
+	else if (magic == FAT_CIGAM)
+	{
+		ft_printf("FAT_CIGAM\n");
+		data->is64 = false;
+		data->cigam = true;
+		res = parse_fat(data);
+	}
+	else if (magic == FAT_CIGAM_64)
+	{
+		ft_printf("FAT_CIGAM_64\n");
+	}
+	else
+		ft_printf("Other\n");
+		
+	return (res);
 }
 
 int parse_file(char *file_name)
@@ -177,22 +265,7 @@ int parse_file(char *file_name)
 	data.start = data_ptr;
 	data.len = stat.st_size;
 
-
-	int res;
-	uint32_t magic = *(uint32_t *)get(data, 0, sizeof(uint32_t));
-
-	if (!magic)
-		ft_printf("NULL\n");
-	else if (magic == MH_MAGIC_64)
-	{
-		ft_printf("MH_MAGIC_64\n");
-		data.is64 = true;
-		res = parse_mach_o(&data);
-	}
-	else
-		ft_printf("Other\n");
-
-
+	int res = parse_object(&data, 0);
 
 	if (munmap(data_ptr, stat.st_size) == -1) // munmap in case of error
 		return (EXIT_FAILURE);
