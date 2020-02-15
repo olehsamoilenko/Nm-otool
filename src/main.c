@@ -19,6 +19,13 @@
 # define SWAP_32(x) ((SWAP_16(x) << 16U) | (SWAP_16((x) >> 16U)))
 # define SWAP_64(x) ((SWAP_32(x) << 32U) | (SWAP_32((x) >> 32U)))
 
+uint32_t ntoh(bool cigam, uint32_t nbr)
+{
+	if (cigam)
+		nbr = SWAP_32(nbr);
+	return (nbr);
+}
+
 typedef struct	s_data
 {
 	void *start;
@@ -47,15 +54,19 @@ int parse_section(t_data *data, void *section)
 
 int parse_segment(t_data *data, uint32_t offset)
 {
+	int res = EXIT_SUCCESS;
 	const size_t seg_cmd_size = data->is64	? sizeof(struct segment_command_64)
 											: sizeof(struct segment_command);
 
 	void *seg_cmd = get(*data, offset, sizeof(struct segment_command_64));
 	if (seg_cmd == NULL)
+	{
+		ft_printf("get seg cmd failed\n");
 		return (EXIT_FAILURE);
+	}
 	uint32_t nsects = data->is64	? ((struct segment_command_64 *)seg_cmd)->nsects
 									: ((struct segment_command *)seg_cmd)->nsects;
-	ft_printf("PARSE SEGMENT nsects: %d\n", nsects);
+	ft_printf("SEGMENT nsects: %d\n", nsects);
 	offset += seg_cmd_size;
 
 	const size_t sec_size = data->is64	? sizeof(struct section_64)
@@ -64,15 +75,21 @@ int parse_segment(t_data *data, uint32_t offset)
 	{
 		void *section = get(*data, offset, sec_size);
 		if (section == NULL)
+		{
+			ft_printf("get section failed\n");
 			return (EXIT_FAILURE);
+		}
 		int res = parse_section(data, section);
 		if (res == EXIT_FAILURE)
+		{
+			ft_printf("parse section failed\n");
 			return (EXIT_FAILURE);
-		offset += sizeof(struct section_64);
+		}
+		offset += sec_size;
 		nsects--;
 	}
 
-	return EXIT_SUCCESS;
+	return res;
 }
 
 int parse_symbol(t_data *data, size_t sym_size, uint32_t offset, uint32_t stroff)
@@ -90,12 +107,12 @@ int parse_symbol(t_data *data, size_t sym_size, uint32_t offset, uint32_t stroff
 	if (str == NULL)
 		return (EXIT_FAILURE);
 
-	ft_printf("SYMBOL: %s\n", str);
+	ft_printf("SYMBOL: type: %d, strx: %d, str: %s\n", type, n_strx, str);
 
 	return (EXIT_SUCCESS);
 }
 
-int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset)
+int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset)
 {
 	const uint32_t cmd_seg = data->is64 ? LC_SEGMENT_64 : LC_SEGMENT;
 
@@ -103,7 +120,10 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset)
 	{
 		int res = parse_segment(data, offset);
 		if (res == EXIT_FAILURE)
+		{
+			ft_printf("parse segment failed\n");
 			return (EXIT_FAILURE);
+		}
 	}
 	else if (lc->cmd == LC_SYMTAB)
 	{
@@ -113,16 +133,21 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset)
 			return (EXIT_FAILURE);
 		uint32_t nsyms = sym_cmd->nsyms;
 		
-		ft_printf("PARSE SYMTAB nsyms: %d\n", nsyms);
+		ft_printf("PARSE SYMTAB nsyms: %d, symoff: %d, stroff: %d\n", nsyms, sym_cmd->symoff, sym_cmd->stroff);
 
 		const size_t sym_size = data->is64	? sizeof(struct nlist_64)
 											: sizeof(struct nlist);
 		int new_offset = 0; // replace with offset
-		while (nsyms) // check nsyms
+
+		while (nsyms)
 		{
-			int res = parse_symbol(data, sym_size, sym_cmd->symoff + new_offset, sym_cmd->stroff); // check offset
+			int res = parse_symbol(data, sym_size, global_offset + sym_cmd->symoff + new_offset, global_offset + sym_cmd->stroff);
+
 			if (res == EXIT_FAILURE)
+			{
+				ft_printf("parse symbol failed\n");
 				return (EXIT_FAILURE);
+			}
 
 			new_offset += sym_size;
 			nsyms--;
@@ -140,22 +165,27 @@ int parse_mach_o(t_data *data, uint32_t offset)
 		return (EXIT_FAILURE);
 	uint32_t ncmds = data->is64	? ((struct mach_header_64 *)header)->ncmds
 								: ((struct mach_header *)header)->ncmds;
-	
-	ft_printf("ncmds: %d\n", ncmds);
+	ncmds = ntoh(data->cigam, ncmds);
 
+	uint32_t fat_offset = offset;
 	offset += header_size;
 
 	while (ncmds)
 	{
 		struct load_command *lc = get(*data, offset, sizeof(struct load_command));
 		if (lc == NULL)
+		{
+			ft_printf("get lc failed\n");
 			return (EXIT_FAILURE);
+		}
 
-		int res = parse_load_command(data, lc, offset);
-		if (res == EXIT_FAILURE)
+		if (parse_load_command(data, lc, offset, fat_offset) == EXIT_FAILURE)
+		{
+			ft_printf("parse_load_command failed\n");
 			return (EXIT_FAILURE);
+		}
 
-		offset += lc->cmdsize;
+		offset += ntoh(data->cigam, lc->cmdsize);
 		ncmds--;
 	}
 
@@ -181,9 +211,10 @@ int parse_fat(t_data *data)
 									
 	bool cigam = data->cigam;
 	bool is64 = data->is64;
-	int res = EXIT_FAILURE;
+	int res = EXIT_SUCCESS;
 	while (narchs)
 	{
+		ft_printf("ARCH %d\n", narchs);
 		void *arch = get(*data, offset, arch_size);
 		if (arch == NULL)
 			return (EXIT_FAILURE);
@@ -191,13 +222,32 @@ int parse_fat(t_data *data)
 		data->cigam = cigam;
 		data->is64 = is64;
 		
-		uint32_t obj_offset = data->is64 ? ((struct fat_arch_64 *)arch)->offset
-										 : ((struct fat_arch *)arch)->offset;
-		if (data->cigam)
-			obj_offset = SWAP_32(obj_offset); // TODO: 64
+		uint32_t arch_offset = data->is64 ? ((struct fat_arch_64 *)arch)->offset
+										  : ((struct fat_arch *)arch)->offset;
+		cpu_type_t cputype = data->is64 ? ((struct fat_arch_64 *)arch)->cputype
+										: ((struct fat_arch *)arch)->cputype;
+		cpu_subtype_t cpusubtype = data->is64 ? ((struct fat_arch_64 *)arch)->cpusubtype
+										      : ((struct fat_arch *)arch)->cpusubtype;
+
+		if (data->cigam) {
+			arch_offset = SWAP_32(arch_offset); // TODO: 64
+			cputype = SWAP_32(cputype);
+			cpusubtype = SWAP_32(cpusubtype);
+			cpusubtype &= 0x0000ffff;
+			// char *test = &(cpusubtype);
+			// ft_printf("%x %x %x %x\n", test[0], test[1], test[2], test[3]);
+		}
 		
-		ft_printf("arch offset: %d\n", obj_offset);
-		res = parse_object(data, obj_offset);
+		ft_printf("arch offset: %d, cputype: %d %d\n", arch_offset, cputype, cpusubtype);
+		// if (cputype == CPU_TYPE_X86_64 && cpusubtype == CPU_SUBTYPE_X86_64_ALL)
+		// {
+			res = parse_object(data, arch_offset);
+			if (res == EXIT_FAILURE)
+			{
+				ft_printf("parse object failed: %d\n", res);
+				return (EXIT_FAILURE);
+			}
+		// }
 		
 		offset += arch_size;
 		narchs--;
@@ -222,6 +272,24 @@ int parse_object(t_data *data, uint32_t offset)
 		data->is64 = true;
 		data->cigam = false;
 		res = parse_mach_o(data, offset);
+	}
+	else if (magic == MH_MAGIC)
+	{
+		ft_printf("MH_MAGIC\n");
+		data->is64 = false;
+		data->cigam = false;
+		res = parse_mach_o(data, offset);
+	}
+	else if (magic == MH_CIGAM)
+	{
+		ft_printf("MH_CIGAM\n");
+		data->is64 = false;
+		data->cigam = true;
+		res = parse_mach_o(data, offset);
+	}
+	else if (magic == MH_CIGAM_64)
+	{
+		ft_printf("MH_CIGAM_64\n");
 	}
 	else if (magic == FAT_MAGIC)
 	{
