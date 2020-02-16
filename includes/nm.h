@@ -19,4 +19,17 @@
 # include <ar.h>
 # include "libft.h"
 
+typedef struct	s_data
+{
+	void *start;
+	size_t len;
+	bool is64;
+	bool cigam;
+}				t_data;
+
+void *get(t_data data, size_t offset, size_t size);
+
+int parse_object(t_data *data, uint32_t offset);
+int parse_archive(t_data *data, uint32_t offset);
+
 #endif

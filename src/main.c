@@ -26,14 +26,6 @@ uint32_t ntoh(bool cigam, uint32_t nbr)
 	return (nbr);
 }
 
-typedef struct	s_data
-{
-	void *start;
-	size_t len;
-	bool is64;
-	bool cigam;
-}				t_data;
-
 void *get(t_data data, size_t offset, size_t size)
 {
 	if (offset + size <= data.len)
@@ -48,7 +40,7 @@ int parse_section(t_data *data, void *section)
 {
 	char *sectname = data->is64 ?	((struct section_64 *)section)->sectname
 								:	((struct section *)section)->sectname;
-	ft_printf("PARSE SECTION %s\n", sectname);
+	ft_printf("SECTION %s\n", sectname);
 	return (EXIT_SUCCESS);
 }
 
@@ -133,7 +125,7 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 			return (EXIT_FAILURE);
 		uint32_t nsyms = sym_cmd->nsyms;
 		
-		ft_printf("PARSE SYMTAB nsyms: %d, symoff: %d, stroff: %d\n", nsyms, sym_cmd->symoff, sym_cmd->stroff);
+		ft_printf("SYMTAB nsyms: %d, symoff: %d, stroff: %d\n", nsyms, sym_cmd->symoff, sym_cmd->stroff);
 
 		const size_t sym_size = data->is64	? sizeof(struct nlist_64)
 											: sizeof(struct nlist);
@@ -192,8 +184,6 @@ int parse_mach_o(t_data *data, uint32_t offset)
 	return (EXIT_SUCCESS);
 }
 
-int parse_object(t_data *data, uint32_t offset);
-
 int parse_fat(t_data *data)
 {
 	// Nm only: filename
@@ -203,7 +193,7 @@ int parse_fat(t_data *data)
 	
 	uint32_t narchs = data->cigam ? SWAP_32(header->nfat_arch)
 								  : header->nfat_arch;
-	ft_printf("PARSE FAT narchs: %d\n", narchs);
+	ft_printf("FAT narchs: %d\n", narchs);
 	
 	uint32_t offset = sizeof(struct fat_header);
 	uint32_t arch_size = data->is64 ? sizeof(struct fat_arch_64)
@@ -214,7 +204,7 @@ int parse_fat(t_data *data)
 	int res = EXIT_SUCCESS;
 	while (narchs)
 	{
-		ft_printf("ARCH %d\n", narchs);
+		// ft_printf("ARCH %d\n", narchs);
 		void *arch = get(*data, offset, arch_size);
 		if (arch == NULL)
 			return (EXIT_FAILURE);
@@ -264,7 +254,7 @@ int parse_object(t_data *data, uint32_t offset)
 
 	if (!magic)
 	{
-		ft_printf("bad magic\n");
+		ft_printf("failed: bad magic\n");
 	}
 	else if (magic == MH_MAGIC_64)
 	{
@@ -289,11 +279,11 @@ int parse_object(t_data *data, uint32_t offset)
 	}
 	else if (magic == MH_CIGAM_64)
 	{
-		ft_printf("MH_CIGAM_64\n");
+		ft_printf("failed: MH_CIGAM_64\n");
 	}
 	else if (magic == FAT_MAGIC)
 	{
-		ft_printf("FAT_MAGIC\n");
+		ft_printf("failed: FAT_MAGIC\n");
 	}
 	else if (magic == FAT_CIGAM)
 	{
@@ -304,10 +294,15 @@ int parse_object(t_data *data, uint32_t offset)
 	}
 	else if (magic == FAT_CIGAM_64)
 	{
-		ft_printf("FAT_CIGAM_64\n");
+		ft_printf("failed: FAT_CIGAM_64\n");
+	}
+	else if (magic == *(uint32_t*)ARMAG)
+	{
+		ft_printf("ARCHIVE\n");
+		res = parse_archive(data, offset);
 	}
 	else
-		ft_printf("Other\n");
+		ft_printf("failed: Other\n");
 		
 	return (res);
 }

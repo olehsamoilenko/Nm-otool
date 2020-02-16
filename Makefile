@@ -16,7 +16,8 @@ INC =			-I ./includes \
 				-I ./libft/includes
 LIB =			-lft -L ./libft
 CC_FLAGS =		# TDCHECK: -Wall -Wextra -Werror
-SRC_LIST =		main
+SRC_LIST =		main \
+				archive
 OBJ =			$(addprefix obj/, $(addsuffix .o, $(SRC_LIST)))
 
 OFF=\033[0m
