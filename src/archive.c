@@ -26,9 +26,9 @@ int parse_archive(t_data *data, uint32_t offset)
 
 	while ((hdr = get(*data, offset, sizeof(struct ar_hdr))) != NULL)
 	{
-		// ft_printf("ar size: %s\n", hdr->ar_size);
-
-		ft_printf("ar name: %s\n", hdr->ar_name);
+		#if DEBUG
+			ft_printf("ar name: %s\n", hdr->ar_name);
+		#endif
 		if (!ft_strnequ(hdr->ar_name, AR_EFMT1, ft_strlen(AR_EFMT1)))
 		{
 			ft_printf("failed: no AR_EFMT1\n");
@@ -42,8 +42,10 @@ int parse_archive(t_data *data, uint32_t offset)
 			ft_printf("name get failed\n");
 			return (EXIT_FAILURE);
 		}
-		ft_printf("name: %s\n", name);
-		ft_printf("offset: %d\n", offset + sizeof(struct ar_hdr) + name_len);
+		#if DEBUG
+			ft_printf("name: %s\n", name);
+			ft_printf("offset: %d\n", offset + sizeof(struct ar_hdr) + name_len);
+		#endif
 
 		int res = parse_object(data, offset + sizeof(struct ar_hdr) + name_len);
 		if (res == EXIT_FAILURE)
