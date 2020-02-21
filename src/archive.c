@@ -42,6 +42,7 @@ int parse_archive(t_data *data, uint32_t offset)
 			ft_printf("name get failed\n");
 			return (EXIT_FAILURE);
 		}
+		ft_printf("\n%s(%s):\n", data->filename, name);
 		#if DEBUG
 			ft_printf("name: %s\n", name);
 			ft_printf("offset: %d\n", offset + sizeof(struct ar_hdr) + name_len);

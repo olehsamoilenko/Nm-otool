@@ -167,6 +167,7 @@ int parse_file(char *file_name)
 	t_data data;
 	data.start = data_ptr;
 	data.len = stat.st_size;
+	data.filename = file_name;
 
 	int res = parse_object(&data, 0);
 

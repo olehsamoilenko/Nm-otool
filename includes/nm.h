@@ -29,6 +29,7 @@ typedef struct	s_data
 	size_t len;
 	bool is64;
 	bool cigam;
+	char *filename;
 
 	int sections_total;
 	int text_section_number;
