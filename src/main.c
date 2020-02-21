@@ -178,7 +178,6 @@ int parse_file(char *file_name)
 
 int main(int argc, char **argv)
 {
-
 	if (argc == 1)
 	{
 		// a.out
@@ -188,7 +187,8 @@ int main(int argc, char **argv)
 		argv++;
 		while (*argv != NULL)
 		{
-			int res = parse_file(*argv);
+			if (parse_file(*argv) == EXIT_FAILURE)
+				return (EXIT_FAILURE);
 			// ft_printf("res: %d\n", res);
 			argv++;
 		}

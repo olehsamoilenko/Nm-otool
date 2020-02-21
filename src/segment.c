@@ -23,15 +23,18 @@ int parse_section(t_data *data, void *section)
 	if (ft_strequ(segname, SEG_TEXT) && ft_strequ(sectname, SECT_TEXT))
 	{
 		data->text_section_number = data->sections_total;
+		// ft_printf("SEG_TEXT found\n");
 	}
 	else if (ft_strequ(segname, SEG_DATA) && ft_strequ(sectname, SECT_DATA))
 	{
 		// ft_printf("GOT IT! %d\n", data->sections_total);
 		data->data_section_number = data->sections_total;
+		// ft_printf("SECT_DATA found\n");
 	}
 	else if (ft_strequ(segname, SEG_DATA) && ft_strequ(sectname, SECT_BSS))
 	{
 		data->bss_section_number = data->sections_total;
+		// ft_printf("SECT_BSS found\n");
 	}
 
 	return (EXIT_SUCCESS);
@@ -63,6 +66,7 @@ int parse_segment(t_data *data, uint32_t offset)
 										: sizeof(struct section);
 
 	int i = 0;
+	// ft_printf("nsects: %d\n");
 	while (++i <= nsects)
 	{
 		void *section = get(*data, offset, sec_size);

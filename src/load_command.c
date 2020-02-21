@@ -110,6 +110,7 @@ void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms)
 {
 	int i = -1;
 
+	// ft_printf("%d %d %d\n", data.text_section_number, data.data_section_number, data.bss_section_number);
 	while (++i < nsyms)
 	{
 		char type = define_type(symbols[i].n_type, symbols[i].n_sect, data);
@@ -151,7 +152,8 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 {
 	const uint32_t cmd_seg = data->is64 ? LC_SEGMENT_64 : LC_SEGMENT;
 
-	if (ntoh(data, lc->cmd) == cmd_seg)
+	// (ntoh(data, lc->cmd) == cmd_seg)
+	if (lc->cmd == cmd_seg)
 	{
 		// ft_printf("LC_SEGMENT\n");
 		int res = parse_segment(data, offset);
@@ -203,6 +205,10 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 		sort_symbols(symbols, ntoh(data->cigam, sym_cmd->nsyms));
 		print_symbols(*data, symbols, ntoh(data->cigam, sym_cmd->nsyms));
 	}
+	// else
+	// {
+	// 	ft_printf("pass %#x\n", lc->cmd);
+	// }
 
 	return (EXIT_SUCCESS);
 }

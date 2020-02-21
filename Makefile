@@ -14,7 +14,11 @@ NM_NAME =		ft_nm
 HEADER =		./includes/nm.h
 INC =			-I ./includes \
 				-I ./libft/includes
+ifeq ($(shell uname), Linux)
+	INC += -I ./platform-include
+endif
 LIB =			-lft -L ./libft
+
 CC_FLAGS =		# TDCHECK: -Wall -Wextra -Werror
 SRC_LIST =		main \
 				archive \
