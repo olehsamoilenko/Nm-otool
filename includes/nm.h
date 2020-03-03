@@ -23,6 +23,12 @@
 # include <ar.h>
 # include "libft.h"
 
+# if DEBUG
+#  define DEBUG 1
+# else
+#  define DEBUG 0
+#endif
+
 typedef struct	s_data
 {
 	void *start;

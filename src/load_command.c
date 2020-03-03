@@ -25,13 +25,11 @@ char define_type(uint8_t n_type, uint8_t n_sect, t_data data)
 	const uint8_t type = n_type & N_TYPE;
 	uint8_t res;
 
-	// ft_printf("%x\n", n_type & N_STAB);
 	if (/*(type != N_ABS && type != N_SECT && type != N_INDR && type != N_UNDF) || */n_type & N_STAB)
 	{
-		// ft_printf("HELLO %x\n", n_type & N_STAB);
 		res = 0;
 	}
-	else if (type == N_UNDF) // ? check value
+	else if (type == N_UNDF)
 		res = 'u';
 	else if (type == N_ABS)
 		res = 'a';
@@ -94,12 +92,14 @@ int parse_symbol(t_data *data, uint32_t offset, uint32_t stroff, t_symbol *symbo
 	uint32_t n_strx = data->is64	? ((struct nlist_64 *)sym)->n_un.n_strx
 									: ((struct nlist *)sym)->n_un.n_strx;
 	n_strx = ntoh(data->cigam, n_strx);
-	symbol->str = get(*data, stroff + n_strx, 0);
-	// ft_printf("SYMBOL: type: %d, strx: %d, str: %s, nsect: %d, nvalue: %d\n",
-	// 	symbol->n_type, n_strx, symbol->str, symbol->n_sect, symbol->n_value);
+	symbol->str = get(*data, stroff + n_strx, 0); // use n_strx as index
+	if (DEBUG)
+		ft_printf("[SYMBOL] type: %2d, strx: %4d, str: %20s, nsect: %d, nvalue: %d\n",
+			symbol->n_type, n_strx, symbol->str, symbol->n_sect, symbol->n_value);
 	if (symbol->str == NULL)
 	{
-		ft_printf("failed: str null\n");
+		if (DEBUG)
+			ft_printf("[SYMBOL] failed: str null\n");
 		return (EXIT_FAILURE);
 	}
 
@@ -140,10 +140,8 @@ void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms)
 		}
 		else
 		{
-			#if DEBUG
-				ft_printf("SKIP: %s\n", symbols[i].str);
-				ft_printf("SYMBOL: type: %d, strx: %d, str: %s\n", type, n_strx, str);
-			#endif
+			if (DEBUG)
+				ft_printf("[SYMBOL] skip: %s, type: %d\n", symbols[i].str, type);
 		}
 	}
 }
@@ -152,14 +150,14 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 {
 	const uint32_t cmd_seg = data->is64 ? LC_SEGMENT_64 : LC_SEGMENT;
 
-	// (ntoh(data, lc->cmd) == cmd_seg)
+	// (ntoh(data, lc->cmd) == cmd_seg) why not ?
 	if (lc->cmd == cmd_seg)
 	{
-		// ft_printf("LC_SEGMENT\n");
 		int res = parse_segment(data, offset);
 		if (res == EXIT_FAILURE)
 		{
-			ft_printf("parse segment failed\n");
+			if (DEBUG)
+			ft_printf("[LC] parse segment failed\n");
 			return (EXIT_FAILURE);
 		}
 	}
@@ -169,20 +167,20 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 		struct symtab_command *sym_cmd = get(*data, offset, sizeof(struct symtab_command));
 		if (sym_cmd == NULL)
 		{
-			ft_printf("get sym_cmd failed\n");
+			if (DEBUG)
+				ft_printf("[LC] get sym_cmd failed\n");
 			return (EXIT_FAILURE);
 		}
 		uint32_t nsyms = ntoh(data->cigam, sym_cmd->nsyms);
 		uint32_t symoff = ntoh(data->cigam, sym_cmd->symoff);
 		uint32_t stroff = ntoh(data->cigam, sym_cmd->stroff);
 		
-		// #if DEBUG
-			// ft_printf("SYMTAB nsyms: %d, symoff: %d, stroff: %d\n", nsyms, symoff, stroff);
-		// #endif
+		if (DEBUG)
+			ft_printf("[LC] nsyms: %d, symoff: %d, stroff: %d\n", nsyms, symoff, stroff);
 
 		const size_t sym_size = data->is64	? sizeof(struct nlist_64)
 											: sizeof(struct nlist);
-		int new_offset = 0; // replace with offset
+		int new_offset = 0; // replace with offset, it's offset to every symbol
 
 		t_symbol *symbols = malloc(nsyms * sizeof(t_symbol));
 		t_symbol *tmp = symbols;
@@ -193,7 +191,8 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 
 			if (res == EXIT_FAILURE)
 			{
-				ft_printf("parse symbol failed\n");
+				if (DEBUG)
+					ft_printf("[LC] parse symbol failed\n");
 				return (EXIT_FAILURE);
 			}
 
@@ -205,10 +204,6 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 		sort_symbols(symbols, ntoh(data->cigam, sym_cmd->nsyms));
 		print_symbols(*data, symbols, ntoh(data->cigam, sym_cmd->nsyms));
 	}
-	// else
-	// {
-	// 	ft_printf("pass %#x\n", lc->cmd);
-	// }
 
 	return (EXIT_SUCCESS);
 }

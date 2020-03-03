@@ -21,9 +21,8 @@ int parse_fat(t_data *data)
 	
 	uint32_t narchs = data->cigam ? SWAP_32(header->nfat_arch)
 								  : header->nfat_arch;
-	#if DEBUG
-		ft_printf("FAT narchs: %d\n", narchs);
-	#endif
+	if (DEBUG)
+		ft_printf("[FAT] narchs: %d\n", narchs);
 	
 	uint32_t offset = sizeof(struct fat_header);
 	uint32_t arch_size = data->is64 ? sizeof(struct fat_arch_64)
@@ -34,9 +33,6 @@ int parse_fat(t_data *data)
 	int res = EXIT_SUCCESS;
 	while (narchs)
 	{
-		#if DEBUG
-			// ft_printf("ARCH %d\n", narchs);
-		#endif
 		void *arch = get(*data, offset, arch_size);
 		if (arch == NULL)
 			return (EXIT_FAILURE);
@@ -56,21 +52,21 @@ int parse_fat(t_data *data)
 			cputype = SWAP_32(cputype);
 			cpusubtype = SWAP_32(cpusubtype);
 			cpusubtype &= 0x0000ffff;
+			// works ?
 			// char *test = &(cpusubtype);
-			#if DEBUG
-				// ft_printf("%x %x %x %x\n", test[0], test[1], test[2], test[3]);
-			#endif
+			// ft_printf("%x %x %x %x\n", test[0], test[1], test[2], test[3]);
 		}
 		
-		#if DEBUG
-			ft_printf("arch offset: %d, cputype: %d %d\n", arch_offset, cputype, cpusubtype);
-		#endif
+		if (DEBUG)
+			ft_printf("[FAT] arch offset: %d, cputype: %d %d\n", arch_offset, cputype, cpusubtype);
+
 		// if (cputype == CPU_TYPE_X86_64 && cpusubtype == CPU_SUBTYPE_X86_64_ALL)
 		// {
 			res = parse_object(data, arch_offset);
 			if (res == EXIT_FAILURE)
 			{
-				ft_printf("parse object failed: %d\n", res);
+				if (DEBUG)
+					ft_printf("[FAT] parse object failed\n");
 				return (EXIT_FAILURE);
 			}
 		// }

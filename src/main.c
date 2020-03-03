@@ -40,7 +40,8 @@ int parse_mach_o(t_data *data, uint32_t offset)
 	void *header = get(*data, offset, header_size);
 	if (header == NULL)
 	{
-		ft_printf("get header failed\n");
+		if (DEBUG)
+			ft_printf("[MACH-O] get header failed\n");
 		return (EXIT_FAILURE);
 	}
 	uint32_t ncmds = data->is64	? ((struct mach_header_64 *)header)->ncmds
@@ -57,13 +58,15 @@ int parse_mach_o(t_data *data, uint32_t offset)
 		struct load_command *lc = get(*data, offset, sizeof(struct load_command));
 		if (lc == NULL)
 		{
-			ft_printf("get lc failed\n");
+			if (DEBUG)
+				ft_printf("[MACH-O] get lc failed\n");
 			return (EXIT_FAILURE);
 		}
 
 		if (parse_load_command(data, lc, offset, fat_offset) == EXIT_FAILURE)
 		{
-			ft_printf("parse_load_command failed\n");
+			if (DEBUG)
+				ft_printf("[MACH-O] parse_load_command failed\n");
 			return (EXIT_FAILURE);
 		}
 
@@ -82,66 +85,69 @@ int parse_object(t_data *data, uint32_t offset)
 
 	if (!magic)
 	{
-		ft_printf("failed: bad magic\n");
+		if (DEBUG)
+			ft_printf("[MAGIC] failed: bad magic\n");
 	}
 	else if (magic == MH_MAGIC_64)
 	{
-		#if DEBUG
-			ft_printf("MH_MAGIC_64\n");
-		#endif
+		if (DEBUG)
+			ft_printf("[MAGIC] MH_MAGIC_64\n");
+
 		data->is64 = true;
 		data->cigam = false;
 		res = parse_mach_o(data, offset);
 	}
 	else if (magic == MH_MAGIC)
 	{
-		#if DEBUG
-			ft_printf("MH_MAGIC\n");
-		#endif
+		if (DEBUG)
+			ft_printf("[MAGIC] MH_MAGIC\n");
+
 		data->is64 = false;
 		data->cigam = false;
 		res = parse_mach_o(data, offset);
 	}
 	else if (magic == MH_CIGAM)
 	{
-		#if DEBUG
-			ft_printf("MH_CIGAM\n");
-		#endif
+		if (DEBUG)
+			ft_printf("[MAGIC] MH_CIGAM\n");
+
 		data->is64 = false;
 		data->cigam = true;
 		res = parse_mach_o(data, offset);
 	}
 	else if (magic == MH_CIGAM_64)
 	{
-		ft_printf("failed: MH_CIGAM_64\n");
+		if (DEBUG)
+			ft_printf("[MAGIC] failed: MH_CIGAM_64\n");
 	}
 	else if (magic == FAT_MAGIC)
 	{
-		ft_printf("failed: FAT_MAGIC\n");
+		if (DEBUG)
+			ft_printf("[MAGIC] failed: FAT_MAGIC\n");
 	}
 	else if (magic == FAT_CIGAM)
 	{
-		#if DEBUG
-			ft_printf("FAT_CIGAM\n");
-		#endif
+		if (DEBUG)
+			ft_printf("[MAGIC] FAT_CIGAM\n");
 		data->is64 = false;
 		data->cigam = true;
 		res = parse_fat(data);
 	}
 	else if (magic == FAT_CIGAM_64)
 	{
-		ft_printf("failed: FAT_CIGAM_64\n");
+		if (DEBUG)
+			ft_printf("[MAGIC] failed: FAT_CIGAM_64\n");
 	}
 	else if (magic == *(uint32_t*)ARMAG)
 	{
-		#if DEBUG
-			ft_printf("ARCHIVE\n");
-		#endif
+		if (DEBUG)
+			ft_printf("[MAGIC] ARCHIVE\n");
 		res = parse_archive(data, offset);
 	}
 	else
 	{
-		ft_printf("failed: Other\n");
+		if (DEBUG)
+			ft_printf("[MAGIC] failed: Other\n");
 	}
 		
 	return (res);

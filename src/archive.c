@@ -19,19 +19,21 @@ int parse_archive(t_data *data, uint32_t offset)
 	struct ar_hdr *hdr = get(*data, offset, sizeof(struct ar_hdr));
 	if (hdr == NULL)
 	{
-		ft_printf("get first header failed\n");
+		if (DEBUG)
+			ft_printf("[ARCHIVE] get first header failed\n");
 		return (EXIT_FAILURE);
 	}
 	offset += sizeof(struct ar_hdr) + ft_atoi(hdr->ar_size);
 
 	while ((hdr = get(*data, offset, sizeof(struct ar_hdr))) != NULL)
 	{
-		#if DEBUG
-			ft_printf("ar name: %s\n", hdr->ar_name);
-		#endif
+		if (DEBUG)
+			ft_printf("[ARCHIVE] name: %s\n", hdr->ar_name);
+
 		if (!ft_strnequ(hdr->ar_name, AR_EFMT1, ft_strlen(AR_EFMT1)))
 		{
-			ft_printf("failed: no AR_EFMT1\n");
+			if (DEBUG)
+				ft_printf("[ARCHIVE] failed: no AR_EFMT1\n");
 			return (EXIT_FAILURE);
 		}
 
@@ -39,19 +41,19 @@ int parse_archive(t_data *data, uint32_t offset)
 		char *name = get(*data, offset + sizeof(struct ar_hdr), name_len);
 		if (name == NULL)
 		{
-			ft_printf("name get failed\n");
+			if (DEBUG)
+				ft_printf("[ARCHIVE] name get failed\n");
 			return (EXIT_FAILURE);
 		}
 		ft_printf("\n%s(%s):\n", data->filename, name);
-		#if DEBUG
-			ft_printf("name: %s\n", name);
-			ft_printf("offset: %d\n", offset + sizeof(struct ar_hdr) + name_len);
-		#endif
+		if (DEBUG)
+			ft_printf("[ARCHIVE] offset: %d\n", offset + sizeof(struct ar_hdr) + name_len);
 
 		int res = parse_object(data, offset + sizeof(struct ar_hdr) + name_len);
 		if (res == EXIT_FAILURE)
 		{
-			ft_printf("ar: parse object failed\n");
+			if (DEBUG)
+				ft_printf("[ARCHIVE] parse object failed\n");
 			return (EXIT_FAILURE);
 		}
 
