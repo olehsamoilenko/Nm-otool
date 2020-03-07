@@ -12,7 +12,7 @@
 
 #include "nm.h"
 
-char define_type(uint8_t n_type, uint8_t n_sect, t_data data)
+char define_type(uint8_t n_type, uint8_t n_sect, uint64_t n_value, t_data data)
 {
 	const uint8_t type = n_type & N_TYPE;
 	uint8_t res;
@@ -21,22 +21,23 @@ char define_type(uint8_t n_type, uint8_t n_sect, t_data data)
 	{
 		res = 0;
 	}
+	else if (type == N_UNDF && n_value)
+		res = 'c';
 	else if (type == N_UNDF)
 		res = 'u';
 	else if (type == N_ABS)
 		res = 'a';
-	else if (type == N_SECT && n_sect == data.text_section_number) // not nulled !
+	else if (type == N_SECT && n_sect == data.text_section_number)
 		res = 't';
-	else if (type == N_SECT && n_sect == data.data_section_number) // not nulled !
+	else if (type == N_SECT && n_sect == data.data_section_number)
 		res = 'd';
-	else if (type == N_SECT && n_sect == data.bss_section_number) // not nulled !
+	else if (type == N_SECT && n_sect == data.bss_section_number)
 		res = 'b';
 	else if (type == N_INDR)
 		res = 'i';
 	else // is N_SECT
 	{
 		res = 's';
-		// ft_printf("sect #%d\n", n_sect);
 	}
 
 	if (n_type & N_EXT)
@@ -109,7 +110,7 @@ void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms)
 	// ft_printf("%d %d %d\n", data.text_section_number, data.data_section_number, data.bss_section_number);
 	while (++i < nsyms)
 	{
-		char type = define_type(symbols[i].n_type, symbols[i].n_sect, data);
+		char type = define_type(symbols[i].n_type, symbols[i].n_sect, symbols[i].n_value, data);
 		// ft_printf("n sect: %d              ", symbols[i].n_sect);
 		if (type)
 		{

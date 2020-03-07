@@ -58,6 +58,8 @@ char *get_arch_name(cpu_type_t cputype, cpu_subtype_t cpusubtype)
 		return ("armv7");
 	else if (cputype == CPU_TYPE_ARM && cpusubtype == CPU_SUBTYPE_ARM_V7S)
 		return ("armv7s");
+	else if (cputype == CPU_TYPE_POWERPC && cpusubtype == CPU_SUBTYPE_POWERPC_ALL)
+		return ("ppc");
 	else
 	{
 		if (DEBUG)
@@ -91,7 +93,11 @@ int parse_fat(t_data *data)
 	{
 		void *arch = get(*data, offset, arch_size);
 		if (arch == NULL)
+		{
+			if (DEBUG)
+				ft_printf("[FAT] arch get failed\n");
 			return (EXIT_FAILURE);
+		}
 		
 		data->cigam = cigam;
 		data->is64 = is64;

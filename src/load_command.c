@@ -16,8 +16,7 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 {
 	const uint32_t cmd_seg = data->is64 ? LC_SEGMENT_64 : LC_SEGMENT;
 
-	// (ntoh(data, lc->cmd) == cmd_seg) why not ?
-	if (lc->cmd == cmd_seg)
+	if (lc->cmd == cmd_seg || ntoh(data, lc->cmd) == cmd_seg) // wtf ?
 	{
 		if (DEBUG)
 			ft_printf("[LC] cmd: SEGMENT\n");

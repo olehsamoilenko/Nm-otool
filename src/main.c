@@ -58,7 +58,10 @@ int parse_mach_o(t_data *data, uint32_t offset)
 	uint32_t fat_offset = offset;
 	offset += header_size;
 
-	data->sections_total = 0; // total sections in mach-o
+	data->sections_total = 0;
+	data->data_section_number = 0;
+	data->bss_section_number = 0;
+	data->text_section_number = 0;
 	if (DEBUG)
 		ft_printf("[MACH-O] ncmds: %d\n", ncmds);
 	while (ncmds)
@@ -89,9 +92,15 @@ int parse_object(t_data *data, uint32_t offset)
 {
 	int res = EXIT_FAILURE;
 	
-	uint32_t magic = *(uint32_t *)get(*data, offset, sizeof(uint32_t));
+	void *m = get(*data, offset, sizeof(uint32_t));
 
-	if (!magic)
+	uint32_t magic;
+	if (m)
+		magic = *(uint32_t *)m;
+	else
+		magic = 0;
+
+	if (magic == 0)
 	{
 		if (DEBUG)
 			ft_printf("[MAGIC] failed: bad magic\n");

@@ -75,6 +75,10 @@ if [[ $1 = "" ]]; then
 		fat/fat_hard
 		fat/MachO-OSX-ppc-and-i386-bash
 		fat/MachO-iOS-armv7-armv7s-arm64-Helloworld
+		32/MachO-OSX-ppc-openssl-1.0.1h
+		lib_stat/lib_long_name.a
+		lib_stat/libft_static.a
+		fat/audiodevice
 	)
 	prefix="test/"
 else
@@ -96,12 +100,6 @@ for filename in "${correct[@]}"; do
 	fi
 	printf "${NC}"
 done
-
-# Invalid type:
-# 32/MachO-OSX-ppc-openssl-1.0.1h
-# lib_stat/lib_long_name.a
-# lib_stat/libft_static.a
-# fat/audiodevice
 
 # LC 0:
 # corrupt/fat_not_fail_except_one
