@@ -22,6 +22,13 @@ uint32_t ntoh(bool cigam, uint32_t nbr)
 	return (nbr);
 }
 
+uint64_t ntoh64(bool cigam, uint64_t nbr)
+{
+	if (cigam)
+		nbr = SWAP_64(nbr);
+	return (nbr);
+}
+
 void *get(t_data data, size_t offset, size_t size)
 {
 	if (offset + size <= data.len)
@@ -52,7 +59,8 @@ int parse_mach_o(t_data *data, uint32_t offset)
 	offset += header_size;
 
 	data->sections_total = 0; // total sections in mach-o
-	// ft_printf("ncmds: %d\n", ncmds);
+	if (DEBUG)
+		ft_printf("[MACH-O] ncmds: %d\n", ncmds);
 	while (ncmds)
 	{
 		struct load_command *lc = get(*data, offset, sizeof(struct load_command));

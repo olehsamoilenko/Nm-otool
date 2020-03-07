@@ -43,13 +43,26 @@ typedef struct	s_data
 	int bss_section_number;
 }				t_data;
 
+typedef struct s_symbol // move to symbol.c
+{
+	char *str;
+	uint8_t n_type;
+	uint8_t n_sect;
+	uint64_t n_value;
+} t_symbol;
+
 void *get(t_data data, size_t offset, size_t size);
 uint32_t ntoh(bool cigam, uint32_t nbr);
+uint64_t ntoh64(bool cigam, uint64_t nbr);
 
 int parse_object(t_data *data, uint32_t offset);
 int parse_fat(t_data *data);
 int parse_archive(t_data *data, uint32_t offset);
 int parse_segment(t_data *data, uint32_t offset);
 int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset);
+
+void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms);
+void sort_symbols(t_symbol *symbols, uint32_t nsyms);
+int parse_symbol(t_data *data, uint32_t offset, uint32_t stroff, t_symbol *symbol);
 
 #endif

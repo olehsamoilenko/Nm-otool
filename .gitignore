@@ -4,4 +4,3 @@ ft_otool
 .vscode
 *.o
 .DS_Store
-*.so

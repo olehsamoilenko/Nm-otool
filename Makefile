@@ -24,7 +24,8 @@ SRC_LIST =		main \
 				archive \
 				fat \
 				segment \
-				load_command
+				load_command \
+				symbol
 OBJ =			$(addprefix obj/, $(addsuffix .o, $(SRC_LIST)))
 
 OFF=\033[0m
