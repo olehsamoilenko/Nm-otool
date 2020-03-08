@@ -12,7 +12,7 @@
 
 #include "nm.h"
 
-int parse_section(t_data *data, void *section, int gl_offset)
+int parse_section(t_data *data, void *section, int gl_offset, cpu_type_t cputype)
 {
 	char *sectname = data->is64 ?	((struct section_64 *)section)->sectname
 								:	((struct section *)section)->sectname;
@@ -37,15 +37,27 @@ int parse_section(t_data *data, void *section, int gl_offset)
 			
 			ft_printf("Contents of (%s,%s) section", segname, sectname);
 			void *text = get(*data, offset + gl_offset, size);
+
+			bool use_bunch;
+			if (cputype != CPU_TYPE_X86_64)
+				use_bunch = true;
+			else
+				use_bunch = false;
+			int values_per_line;
+			if (use_bunch)
+				values_per_line = 4;
+			else
+				values_per_line = 16;
 			if (text != NULL)
 			{
-				size /= 4;
+				if (use_bunch)
+					size /= 4;
 				int i = 0;
 				while (size)
 				{
 					if (i == 0)
 					{
-						i = 4;
+						i = values_per_line;
 						ft_putchar('\n');
 						if (data->is64)
 							ft_printf("%016lx\t", addr);
@@ -53,9 +65,18 @@ int parse_section(t_data *data, void *section, int gl_offset)
 							ft_printf("%08x\t", addr);
 						addr += 16;
 					}
-					ft_printf("%08x ", *(uint32_t *)text);
+					if (use_bunch)
+					{
+						ft_printf("%08x", *(uint32_t *)text);
+						text += 4;
+					}
+					else
+					{
+						ft_printf("%02x", *(uint8_t *)text);
+						text += 1;
+					}
+					ft_putchar(' ');
 					i--;
-					text = (uint32_t *)text + 1;
 					size--;
 				}
 				ft_putchar('\n');
@@ -63,7 +84,7 @@ int parse_section(t_data *data, void *section, int gl_offset)
 			else
 			{
 				if (DEBUG)
-					ft_printf("[SECTION] fail getting text\n");
+					ft_printf("[OTOOL] fail getting text\n");
 				return (EXIT_FAILURE);
 			}
 		}
@@ -84,7 +105,7 @@ int parse_section(t_data *data, void *section, int gl_offset)
 	return (EXIT_SUCCESS);
 }
 
-int parse_segment(t_data *data, uint32_t offset, uint32_t global_offset)
+int parse_segment(t_data *data, uint32_t offset, uint32_t global_offset, cpu_type_t cputype)
 {
 	int res = EXIT_SUCCESS;
 	const size_t seg_cmd_size = data->is64	? sizeof(struct segment_command_64)
@@ -117,7 +138,7 @@ int parse_segment(t_data *data, uint32_t offset, uint32_t global_offset)
 				ft_printf("[SEGMENT] get section failed\n");
 			return (EXIT_FAILURE);
 		}
-		int res = parse_section(data, section, global_offset);
+		int res = parse_section(data, section, global_offset, cputype);
 		if (res == EXIT_FAILURE)
 		{
 			if (DEBUG)

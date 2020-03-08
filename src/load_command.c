@@ -12,7 +12,7 @@
 
 #include "nm.h"
 
-int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset)
+int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset, cpu_type_t cputype)
 {
 	const uint32_t cmd_seg = data->is64 ? LC_SEGMENT_64 : LC_SEGMENT;
 
@@ -20,7 +20,7 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 	{
 		if (DEBUG)
 			ft_printf("[LC] cmd: SEGMENT\n");
-		int res = parse_segment(data, offset, global_offset);
+		int res = parse_segment(data, offset, global_offset, cputype);
 		if (res == EXIT_FAILURE)
 		{
 			if (DEBUG)

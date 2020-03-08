@@ -7,6 +7,7 @@ NC='\033[0m'
 if [[ $1 = "" ]]; then
 	otool_correct=(
 		fat/MachO-iOS-armv7-armv7s-arm64-Helloworld
+		fat_lib/ssh-keychain.dylib
 	)
 	nm_correct=(
 		fat_lib/ssh-keychain.dylib

@@ -41,8 +41,9 @@ void *get(t_data data, size_t offset, size_t size)
 
 
 
-int parse_mach_o(t_data *data, uint32_t offset)
+int parse_mach_o(t_data *data, uint32_t offset, char *label)
 {
+	ft_putstr(label);
 	size_t header_size = data->is64 ? sizeof(struct mach_header_64) : sizeof(struct mach_header);
 	void *header = get(*data, offset, header_size);
 	if (header == NULL)
@@ -53,6 +54,8 @@ int parse_mach_o(t_data *data, uint32_t offset)
 	}
 	uint32_t ncmds = data->is64	? ((struct mach_header_64 *)header)->ncmds
 								: ((struct mach_header *)header)->ncmds;
+	cpu_type_t cputype = data->is64	? ((struct mach_header_64 *)header)->cputype
+									: ((struct mach_header *)header)->cputype;
 	ncmds = ntoh(data->cigam, ncmds);
 
 	uint32_t fat_offset = offset;
@@ -74,7 +77,7 @@ int parse_mach_o(t_data *data, uint32_t offset)
 			return (EXIT_FAILURE);
 		}
 
-		if (parse_load_command(data, lc, offset, fat_offset) == EXIT_FAILURE)
+		if (parse_load_command(data, lc, offset, fat_offset, cputype) == EXIT_FAILURE)
 		{
 			if (DEBUG)
 				ft_printf("[MACH-O] parse_load_command failed\n");
@@ -88,10 +91,9 @@ int parse_mach_o(t_data *data, uint32_t offset)
 	return (EXIT_SUCCESS);
 }
 
-int parse_object(t_data *data, uint32_t offset)
+int parse_object(t_data *data, uint32_t offset, char *label)
 {
 	int res = EXIT_FAILURE;
-	
 	void *m = get(*data, offset, sizeof(uint32_t));
 
 	uint32_t magic;
@@ -112,7 +114,7 @@ int parse_object(t_data *data, uint32_t offset)
 
 		data->is64 = true;
 		data->cigam = false;
-		res = parse_mach_o(data, offset);
+		res = parse_mach_o(data, offset, label);
 	}
 	else if (magic == MH_MAGIC)
 	{
@@ -121,7 +123,7 @@ int parse_object(t_data *data, uint32_t offset)
 
 		data->is64 = false;
 		data->cigam = false;
-		res = parse_mach_o(data, offset);
+		res = parse_mach_o(data, offset, label);
 	}
 	else if (magic == MH_CIGAM)
 	{
@@ -130,7 +132,7 @@ int parse_object(t_data *data, uint32_t offset)
 
 		data->is64 = false;
 		data->cigam = true;
-		res = parse_mach_o(data, offset);
+		res = parse_mach_o(data, offset, label);
 	}
 	else if (magic == MH_CIGAM_64)
 	{
@@ -192,7 +194,10 @@ int parse_file(char *file_name)
 	data.len = stat.st_size;
 	data.filename = file_name;
 
-	int res = parse_object(&data, 0);
+	char *label;
+	if (OTOOL)
+		label = ft_strjoin(file_name, ":\n");
+	int res = parse_object(&data, 0, label);
 
 	if (munmap(data_ptr, stat.st_size) == -1) // munmap in case of error
 		return (EXIT_FAILURE);
@@ -208,6 +213,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+		// print file name
 		argv++;
 		while (*argv != NULL)
 		{

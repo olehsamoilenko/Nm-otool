@@ -67,11 +67,11 @@ void *get(t_data data, size_t offset, size_t size);
 uint32_t ntoh(bool cigam, uint32_t nbr);
 uint64_t ntoh64(bool cigam, uint64_t nbr);
 
-int parse_object(t_data *data, uint32_t offset);
+int parse_object(t_data *data, uint32_t offset, char *label);
 int parse_fat(t_data *data);
 int parse_archive(t_data *data, uint32_t offset);
-int parse_segment(t_data *data, uint32_t offset, uint32_t global_offset);
-int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset);
+int parse_segment(t_data *data, uint32_t offset, uint32_t global_offset, cpu_type_t cputype);
+int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset, cpu_type_t cputype);
 
 void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms);
 void sort_symbols(t_symbol *symbols, uint32_t nsyms);

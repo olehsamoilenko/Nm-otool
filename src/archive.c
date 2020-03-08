@@ -45,11 +45,11 @@ int parse_archive(t_data *data, uint32_t offset)
 				ft_printf("[ARCHIVE] name get failed\n");
 			return (EXIT_FAILURE);
 		}
-		ft_printf("\n%s(%s):\n", data->filename, name);
+		ft_printf("\n%s(%s):\n", data->filename, name); // to label
 		if (DEBUG)
 			ft_printf("[ARCHIVE] offset: %d\n", offset + sizeof(struct ar_hdr) + name_len);
 
-		int res = parse_object(data, offset + sizeof(struct ar_hdr) + name_len);
+		int res = parse_object(data, offset + sizeof(struct ar_hdr) + name_len, "");
 		if (res == EXIT_FAILURE)
 		{
 			if (DEBUG)
