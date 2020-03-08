@@ -39,7 +39,7 @@ int parse_section(t_data *data, void *section, int gl_offset, cpu_type_t cputype
 			void *text = get(*data, offset + gl_offset, size);
 
 			bool use_bunch;
-			if (cputype != CPU_TYPE_X86_64)
+			if (cputype != CPU_TYPE_X86 && cputype != CPU_TYPE_X86_64)
 				use_bunch = true;
 			else
 				use_bunch = false;

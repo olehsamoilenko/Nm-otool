@@ -138,6 +138,8 @@ int parse_fat(t_data *data)
 				label = ft_strjoin(label, get_arch_name(cputype, cpusubtype));
 				label = ft_strjoin(label, "):\n");
 			}
+			else if (OTOOL)
+				label = ft_strjoin(data->filename, ":\n");
 
 			res = parse_object(data, arch_offset, label);
 			if (res == EXIT_FAILURE)

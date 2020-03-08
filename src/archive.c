@@ -25,6 +25,9 @@ int parse_archive(t_data *data, uint32_t offset)
 	}
 	offset += sizeof(struct ar_hdr) + ft_atoi(hdr->ar_size);
 
+	if (OTOOL)
+		ft_printf("Archive : %s\n", data->filename); // to label ?
+
 	while ((hdr = get(*data, offset, sizeof(struct ar_hdr))) != NULL)
 	{
 		if (DEBUG)
@@ -45,11 +48,18 @@ int parse_archive(t_data *data, uint32_t offset)
 				ft_printf("[ARCHIVE] name get failed\n");
 			return (EXIT_FAILURE);
 		}
-		ft_printf("\n%s(%s):\n", data->filename, name); // to label
+
+		char *label = data->filename;
+		label = ft_strjoin(label, "(");
+		label = ft_strjoin(label, name);
+		label = ft_strjoin(label, "):\n");
+		if (NM)
+			label = ft_strjoin("\n", label);
+
 		if (DEBUG)
 			ft_printf("[ARCHIVE] offset: %d\n", offset + sizeof(struct ar_hdr) + name_len);
 
-		int res = parse_object(data, offset + sizeof(struct ar_hdr) + name_len, "");
+		int res = parse_object(data, offset + sizeof(struct ar_hdr) + name_len, label);
 		if (res == EXIT_FAILURE)
 		{
 			if (DEBUG)
