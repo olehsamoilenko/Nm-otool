@@ -129,7 +129,7 @@ void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms)
 					ft_printf("%016lx", symbols[i].n_value);
 				else
 				{
-					ft_printf("%08lx", symbols[i].n_value);
+					ft_printf("%08x", symbols[i].n_value);
 				}
 			}
 

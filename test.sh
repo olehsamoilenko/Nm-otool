@@ -5,7 +5,10 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 if [[ $1 = "" ]]; then
-	correct=(
+	otool_correct=(
+		fat/MachO-iOS-armv7-armv7s-arm64-Helloworld
+	)
+	nm_correct=(
 		fat_lib/ssh-keychain.dylib
 		fat_lib/PN548_OSX.dylib
 		32/MachO-OSX-x86-ls
@@ -82,21 +85,37 @@ if [[ $1 = "" ]]; then
 	)
 	prefix="test/"
 else
-	correct=(
+	nm_correct=(
+		$1
+	)
+	otool_correct=(
 		$1
 	)
 	prefix=""
 fi
 
+otool="otool -t" # ../UNIT_Factory/Nm-otool/ft_otool
+for filename in "${otool_correct[@]}"; do
+	./ft_otool $prefix$filename > /tmp/diff
+	$otool $prefix$filename > /tmp/diff2
+	res=$(diff /tmp/diff /tmp/diff2)
+	if [[ ${res} = "" ]]; then
+		printf "${GREEN}OTOOL: $filename: OK\n"
+	else
+		printf "${RED}OTOOL: $filename: KO\n${res}\n"
+	fi
+	printf "${NC}"
+done
+
 nm="nm" # ../UNIT_Factory/Nm-otool/ft_nm
-for filename in "${correct[@]}"; do
+for filename in "${nm_correct[@]}"; do
 	./ft_nm $prefix$filename > /tmp/diff
 	$nm $prefix$filename > /tmp/diff2
 	res=$(diff /tmp/diff /tmp/diff2)
 	if [[ ${res} = "" ]]; then
-		printf "${GREEN}$filename: OK\n"
+		printf "${GREEN}NM: $filename: OK\n"
 	else
-		printf "${RED}$filename: KO\n${res}\n"
+		printf "${RED}NM: $filename: KO\n${res}\n"
 	fi
 	printf "${NC}"
 done

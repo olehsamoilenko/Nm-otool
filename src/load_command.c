@@ -20,7 +20,7 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 	{
 		if (DEBUG)
 			ft_printf("[LC] cmd: SEGMENT\n");
-		int res = parse_segment(data, offset);
+		int res = parse_segment(data, offset, global_offset);
 		if (res == EXIT_FAILURE)
 		{
 			if (DEBUG)
@@ -28,7 +28,7 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 			return (EXIT_FAILURE);
 		}
 	}
-	else if (ntoh(data->cigam, lc->cmd) == LC_SYMTAB)
+	else if (NM && ntoh(data->cigam, lc->cmd) == LC_SYMTAB)
 	{
 		// NM only
 		struct symtab_command *sym_cmd = get(*data, offset, sizeof(struct symtab_command));

@@ -126,7 +126,14 @@ int parse_fat(t_data *data)
 			|| (cputype == CPU_TYPE_X86_64 && cpusubtype == CPU_SUBTYPE_X86_64_ALL)) // wat ?
 		{
 			if (show_all)
-				ft_printf("\n%s (for architecture %s):\n", data->filename, get_arch_name(cputype, cpusubtype));
+			{
+				if (NM)
+					ft_putchar('\n');
+				ft_printf("%s (", data->filename);
+				if (NM)
+					ft_putstr("for ");
+				ft_printf("architecture %s):\n",  get_arch_name(cputype, cpusubtype));
+			}
 			res = parse_object(data, arch_offset);
 			if (res == EXIT_FAILURE)
 			{

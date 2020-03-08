@@ -29,6 +29,18 @@
 #  define DEBUG 0
 #endif
 
+# if NM
+#  define NM 1
+# else
+#  define NM 0
+#endif
+
+# if OTOOL
+#  define OTOOL 1
+# else
+#  define OTOOL 0
+#endif
+
 typedef struct	s_data
 {
 	void *start;
@@ -58,7 +70,7 @@ uint64_t ntoh64(bool cigam, uint64_t nbr);
 int parse_object(t_data *data, uint32_t offset);
 int parse_fat(t_data *data);
 int parse_archive(t_data *data, uint32_t offset);
-int parse_segment(t_data *data, uint32_t offset);
+int parse_segment(t_data *data, uint32_t offset, uint32_t global_offset);
 int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset);
 
 void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms);

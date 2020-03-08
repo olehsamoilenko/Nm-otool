@@ -12,7 +12,7 @@
 
 #include "nm.h"
 
-int parse_section(t_data *data, void *section)
+int parse_section(t_data *data, void *section, int gl_offset)
 {
 	char *sectname = data->is64 ?	((struct section_64 *)section)->sectname
 								:	((struct section *)section)->sectname;
@@ -26,6 +26,47 @@ int parse_section(t_data *data, void *section)
 		data->text_section_number = data->sections_total;
 		if (DEBUG)
 			ft_printf("[SECTION] SEG_TEXT found\n");
+		if (OTOOL)
+		{
+			uint64_t size = data->is64		?	((struct section_64 *)section)->size
+											:	((struct section *)section)->size;
+			uint32_t offset = data->is64	?	((struct section_64 *)section)->offset
+											:	((struct section *)section)->offset;
+			uint64_t addr = data->is64		?	((struct section_64 *)section)->addr
+											:	((struct section *)section)->addr;
+			
+			ft_printf("Contents of (%s,%s) section", segname, sectname);
+			void *text = get(*data, offset + gl_offset, size);
+			if (text != NULL)
+			{
+				size /= 4;
+				int i = 0;
+				while (size)
+				{
+					if (i == 0)
+					{
+						i = 4;
+						ft_putchar('\n');
+						if (data->is64)
+							ft_printf("%016lx\t", addr);
+						else
+							ft_printf("%08x\t", addr);
+						addr += 16;
+					}
+					ft_printf("%08x ", *(uint32_t *)text);
+					i--;
+					text = (uint32_t *)text + 1;
+					size--;
+				}
+				ft_putchar('\n');
+			}
+			else
+			{
+				if (DEBUG)
+					ft_printf("[SECTION] fail getting text\n");
+				return (EXIT_FAILURE);
+			}
+		}
 	}
 	else if (ft_strequ(segname, SEG_DATA) && ft_strequ(sectname, SECT_DATA))
 	{
@@ -43,7 +84,7 @@ int parse_section(t_data *data, void *section)
 	return (EXIT_SUCCESS);
 }
 
-int parse_segment(t_data *data, uint32_t offset)
+int parse_segment(t_data *data, uint32_t offset, uint32_t global_offset)
 {
 	int res = EXIT_SUCCESS;
 	const size_t seg_cmd_size = data->is64	? sizeof(struct segment_command_64)
@@ -76,7 +117,7 @@ int parse_segment(t_data *data, uint32_t offset)
 				ft_printf("[SEGMENT] get section failed\n");
 			return (EXIT_FAILURE);
 		}
-		int res = parse_section(data, section);
+		int res = parse_section(data, section, global_offset);
 		if (res == EXIT_FAILURE)
 		{
 			if (DEBUG)
