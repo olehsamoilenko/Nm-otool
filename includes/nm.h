@@ -53,17 +53,26 @@ typedef struct	s_data
 	int text_section_number;
 	int data_section_number;
 	int bss_section_number;
+
+	bool flag_n;
+	bool flag_p;
+	bool flag_r;
+	bool flag_x;
+	bool flag_j;
 }				t_data;
 
 typedef struct s_symbol // move to symbol.c
 {
 	char *str;
+	uint32_t n_strx;
 	uint8_t n_type;
 	uint8_t n_sect;
+	uint16_t n_desc;
 	uint64_t n_value;
 } t_symbol;
 
 void *get(t_data data, size_t offset, size_t size);
+uint16_t ntoh16(bool cigam, uint16_t nbr);
 uint32_t ntoh(bool cigam, uint32_t nbr);
 uint64_t ntoh64(bool cigam, uint64_t nbr);
 
@@ -74,7 +83,7 @@ int parse_segment(t_data *data, uint32_t offset, uint32_t global_offset, cpu_typ
 int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset, cpu_type_t cputype);
 
 void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms);
-void sort_symbols(t_symbol *symbols, uint32_t nsyms);
+void sort_symbols(t_symbol *symbols, uint32_t nsyms, t_data data);
 int parse_symbol(t_data *data, uint32_t offset, uint32_t stroff, t_symbol *symbol);
 
 #endif

@@ -46,7 +46,7 @@ char define_type(uint8_t n_type, uint8_t n_sect, uint64_t n_value, t_data data)
 	return (res);
 }
 
-void sort_symbols(t_symbol *symbols, uint32_t nsyms)
+void sort_symbols(t_symbol *symbols, uint32_t nsyms, t_data data)
 {
 	int i = -1;
 	int j = -1;
@@ -55,8 +55,25 @@ void sort_symbols(t_symbol *symbols, uint32_t nsyms)
 	{
 		while (++j < nsyms)
 		{
-			int diff = ft_strcmp(symbols[i].str, symbols[j].str);
-			if (diff < 0 || (diff == 0 && symbols[i].n_value < symbols[j].n_value))
+			bool swap = false;
+			int diff_str = ft_strcmp(symbols[i].str, symbols[j].str);
+			int64_t diff_adr = symbols[i].n_value - symbols[j].n_value;
+
+			// if (data.flag_n)
+			// {
+			// 	if (define_type(symbols[i].n_type, symbols[i].n_sect, symbols[i].n_value, data) == 'U'
+			// 		|| diff_adr < 0
+			// 		|| (diff_adr == 0 && diff_str < 0))
+			// 		swap = true;
+			// }
+			// else
+			// {
+				if (diff_str < 0 || (diff_str == 0 && diff_adr < 0))
+					swap = true;
+			// }
+			if (data.flag_r)
+				swap = !swap;
+			if (swap)
 			{
 				t_symbol tmp = symbols[i];
 				symbols[i] = symbols[j];
@@ -79,20 +96,22 @@ int parse_symbol(t_data *data, uint32_t offset, uint32_t stroff, t_symbol *symbo
 									: ((struct nlist *)sym)->n_type;
 	symbol->n_sect = data->is64		? ((struct nlist_64 *)sym)->n_sect
 									: ((struct nlist *)sym)->n_sect;
-	
+	symbol->n_desc = data->is64		? ((struct nlist_64 *)sym)->n_desc
+									: ((struct nlist *)sym)->n_desc;
+	symbol->n_desc = ntoh16(data->cigam, symbol->n_desc);
 	symbol->n_value = data->is64	? ((struct nlist_64 *)sym)->n_value
 									: ((struct nlist *)sym)->n_value;
 	if (data->is64)
 		symbol->n_value = ntoh64(data->cigam, symbol->n_value);
 	else
 		symbol->n_value = ntoh(data->cigam, symbol->n_value);
-	uint32_t n_strx = data->is64	? ((struct nlist_64 *)sym)->n_un.n_strx
-									: ((struct nlist *)sym)->n_un.n_strx;
-	n_strx = ntoh(data->cigam, n_strx);
-	symbol->str = get(*data, stroff + n_strx, 0); // use n_strx as index
+	symbol->n_strx = data->is64	? ((struct nlist_64 *)sym)->n_un.n_strx
+								: ((struct nlist *)sym)->n_un.n_strx;
+	symbol->n_strx = ntoh(data->cigam, symbol->n_strx);
+	symbol->str = get(*data, stroff + symbol->n_strx, 0); // use symbol->n_strx as index
 	if (DEBUG)
 		ft_printf("[SYMBOL] type: %2d, strx: %4d, str: %20s, nsect: %d, nvalue: %lu\n",
-			symbol->n_type, n_strx, symbol->str, symbol->n_sect, symbol->n_value);
+			symbol->n_type, symbol->n_strx, symbol->str, symbol->n_sect, symbol->n_value);
 	if (symbol->str == NULL)
 	{
 		if (DEBUG)
@@ -107,33 +126,48 @@ void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms)
 {
 	int i = -1;
 
-	// ft_printf("%d %d %d\n", data.text_section_number, data.data_section_number, data.bss_section_number);
 	while (++i < nsyms)
 	{
 		char type = define_type(symbols[i].n_type, symbols[i].n_sect, symbols[i].n_value, data);
-		// ft_printf("n sect: %d              ", symbols[i].n_sect);
 		if (type)
 		{
-			if (type == 'U')
+			if (!data.flag_j)
 			{
-				if (data.is64)
-					ft_printf("%16s", "");
+				if (data.flag_x)
+				{
+					if (data.is64)
+						ft_printf("%016lx %02x %02x %04x %08x ",
+						symbols[i].n_value, symbols[i].n_type, symbols[i].n_sect,
+						symbols[i].n_desc, symbols[i].n_strx);
+					else
+					{
+						ft_printf("%08x %02x %02x %04x %08x ",
+						symbols[i].n_value, symbols[i].n_type, symbols[i].n_sect,
+						symbols[i].n_desc, symbols[i].n_strx);
+					}
+				}
+				else if (type == 'U')
+				{
+					if (data.is64)
+						ft_printf("%16s ", "");
+					else
+					{
+						ft_printf("%8s ", "");
+					}
+					ft_printf("%c ", type);
+				}
 				else
 				{
-					ft_printf("%8s", "");
+					if (data.is64)
+						ft_printf("%016lx ", symbols[i].n_value);
+					else
+					{
+						ft_printf("%08x ", symbols[i].n_value);
+					}
+					ft_printf("%c ", type);
 				}
 			}
-			else
-			{
-				if (data.is64)
-					ft_printf("%016lx", symbols[i].n_value);
-				else
-				{
-					ft_printf("%08x", symbols[i].n_value);
-				}
-			}
-
-			ft_printf(" %c %s\n", type, symbols[i].str);
+			ft_printf("%s\n", symbols[i].str);
 		}
 		else
 		{

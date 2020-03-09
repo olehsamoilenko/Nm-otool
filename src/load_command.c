@@ -68,7 +68,8 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 			nsyms--;
 		}
 
-		sort_symbols(symbols, ntoh(data->cigam, sym_cmd->nsyms));
+		if (!data->flag_p)
+			sort_symbols(symbols, ntoh(data->cigam, sym_cmd->nsyms), *data);
 		print_symbols(*data, symbols, ntoh(data->cigam, sym_cmd->nsyms));
 	}
 	else if (lc->cmd == 0 && DEBUG)

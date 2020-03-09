@@ -29,6 +29,13 @@ uint64_t ntoh64(bool cigam, uint64_t nbr)
 	return (nbr);
 }
 
+uint16_t ntoh16(bool cigam, uint16_t nbr) // mb without it ?
+{
+	if (cigam)
+		nbr = SWAP_16(nbr);
+	return (nbr);
+}
+
 void *get(t_data data, size_t offset, size_t size)
 {
 	if (offset + size <= data.len)
@@ -172,7 +179,7 @@ int parse_object(t_data *data, uint32_t offset, char *label)
 	return (res);
 }
 
-int parse_file(char *file_name)
+int parse_file(char *file_name, t_data *data)
 {
 	int			fd;
 	struct stat	stat;
@@ -186,43 +193,108 @@ int parse_file(char *file_name)
 		return (EXIT_FAILURE);
 	if ((data_ptr = mmap(0, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED)
 		return (EXIT_FAILURE);
-	if (close(fd) == -1) // close in case of error
+	if (close(fd) == -1)
 		return (EXIT_FAILURE);
 
-	t_data data;
-	data.start = data_ptr;
-	data.len = stat.st_size;
-	data.filename = file_name;
+	
+	data->start = data_ptr;
+	data->len = stat.st_size;
+	data->filename = file_name;
 
 	char *label;
 	if (OTOOL)
 		label = ft_strjoin(file_name, ":\n");
-	int res = parse_object(&data, 0, label);
+	int res = parse_object(data, 0, label);
 
-	if (munmap(data_ptr, stat.st_size) == -1) // munmap in case of error
+	if (munmap(data_ptr, stat.st_size) == -1)
 		return (EXIT_FAILURE);
 
 	return (res);
 }
 
+bool store_flag(char flag, t_data *data)
+{
+	const char *alailable = "nprjx";
+
+	if (ft_strchr(alailable, flag) == NULL)
+	{
+		ft_printf("ft_nm: Unknown argument '-%c'. Please use: '-%s'\n", flag, alailable);
+		return (false);
+	}
+	if (flag == 'n' && data->flag_n == false)
+		data->flag_n = true;
+	else if (flag == 'p' && data->flag_p == false)
+		data->flag_p = true;
+	else if (flag == 'r' && data->flag_r == false)
+		data->flag_r = true;
+	else if (flag == 'j' && data->flag_j == false)
+		data->flag_j = true;
+	else if (flag == 'x' && data->flag_x == false)
+		data->flag_x = true;
+	else
+	{
+		ft_printf("ft_nm: '-%c' may only occur zero or one times!\n", flag);
+		return (false);
+	}
+
+	return (true);
+}
+
+bool get_flags(t_data *data, int argc, char **argv)
+{
+	int i = 0;
+
+	while (++i < argc)
+	{
+		if (argv[i][0] == '-') // check nm
+		{
+			int j = 0;
+			while (argv[i][++j])
+			{
+				if (store_flag(argv[i][j], data))
+				{
+					if (DEBUG)
+						ft_printf("[ARGV] flag: %c\n", argv[i][j]);
+				}
+				else
+					return (false);
+			}
+		}
+	}
+
+	return (true);
+}
+
 int main(int argc, char **argv)
 {
+	t_data data;
+	int res = EXIT_SUCCESS;
+
+	ft_bzero(&data, sizeof(t_data));
+	if (get_flags(&data, argc, argv) == false)
+		return (EXIT_FAILURE);
 	if (argc == 1)
 	{
 		// a.out
 	}
 	else
 	{
-		// print file name
-		argv++;
-		while (*argv != NULL)
+		int i = 0;
+		while (++i < argc)
 		{
-			if (parse_file(*argv) == EXIT_FAILURE)
-				return (EXIT_FAILURE);
-			// ft_printf("res: %d\n", res);
-			argv++;
+			if (argv[i][0] != '-')
+			{
+				if (DEBUG)
+					ft_printf("[ARGV] parse file: %s\n", argv[i]);
+				if (parse_file(argv[i], &data) == EXIT_FAILURE)
+				{
+					res = EXIT_FAILURE;
+					if (DEBUG)
+						ft_printf("[ARGV] parse failed: %s\n", argv[i]);
+				}
+			}
 		}
 	}
 
-	return (EXIT_SUCCESS);
+	return (res);
 }

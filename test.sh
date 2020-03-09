@@ -189,6 +189,76 @@ for filename in "${nm_correct[@]}"; do
 	printf "${NC}"
 done
 
+# -x tests
+# nm="nm -x"
+# for filename in "${nm_correct[@]}"; do
+# 	./ft_nm -x $prefix$filename > /tmp/diff
+# 	$nm $prefix$filename > /tmp/diff2
+# 	res=$(diff /tmp/diff /tmp/diff2)
+# 	if [[ ${res} = "" ]]; then
+# 		printf "${GREEN}NM (-x): $filename: OK\n"
+# 	else
+# 		printf "${RED}NM (-x): $filename: KO\n${res}\n"
+# 	fi
+# 	printf "${NC}"
+# done
+
+# -p tests
+# nm="nm -p"
+# for filename in "${nm_correct[@]}"; do
+# 	./ft_nm -p $prefix$filename > /tmp/diff
+# 	$nm $prefix$filename > /tmp/diff2
+# 	res=$(diff /tmp/diff /tmp/diff2)
+# 	if [[ ${res} = "" ]]; then
+# 		printf "${GREEN}NM (-p): $filename: OK\n"
+# 	else
+# 		printf "${RED}NM (-p): $filename: KO\n${res}\n"
+# 	fi
+# 	printf "${NC}"
+# done
+
+# -j tests
+# nm="nm -j"
+# for filename in "${nm_correct[@]}"; do
+# 	./ft_nm -j $prefix$filename > /tmp/diff
+# 	$nm $prefix$filename > /tmp/diff2
+# 	res=$(diff /tmp/diff /tmp/diff2)
+# 	if [[ ${res} = "" ]]; then
+# 		printf "${GREEN}NM (-j): $filename: OK\n"
+# 	else
+# 		printf "${RED}NM (-j): $filename: KO\n${res}\n"
+# 	fi
+# 	printf "${NC}"
+# done
+
+# -r tests
+# nm="nm -r"
+# for filename in "${nm_correct[@]}"; do
+# 	./ft_nm -r $prefix$filename > /tmp/diff
+# 	$nm $prefix$filename > /tmp/diff2
+# 	res=$(diff /tmp/diff /tmp/diff2)
+# 	if [[ ${res} = "" ]]; then
+# 		printf "${GREEN}NM: $filename: OK\n"
+# 	else
+# 		printf "${RED}NM: $filename: KO\n${res}\n"
+# 	fi
+# 	printf "${NC}"
+# done
+
+# -n tests
+# nm="nm -n"
+# for filename in "${nm_correct[@]}"; do
+# 	./ft_nm -n $prefix$filename > /tmp/diff
+# 	$nm $prefix$filename > /tmp/diff2
+# 	res=$(diff /tmp/diff /tmp/diff2)
+# 	if [[ ${res} = "" ]]; then
+# 		printf "${GREEN}NM: $filename: OK\n"
+# 	else
+# 		printf "${RED}NM: $filename: KO\n${res}\n"
+# 	fi
+# 	printf "${NC}"
+# done
+
 # LC 0:
 # corrupt/fat_not_fail_except_one
 
