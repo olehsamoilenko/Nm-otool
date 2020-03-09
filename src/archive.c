@@ -37,7 +37,7 @@ int parse_archive(t_data *data, uint32_t offset)
 		{
 			if (DEBUG)
 				ft_printf("[ARCHIVE] failed: no AR_EFMT1\n");
-			return (EXIT_FAILURE);
+			return (EXIT_SUCCESS);
 		}
 
 		uint32_t name_len = ft_atoi(hdr->ar_name + ft_strlen(AR_EFMT1));

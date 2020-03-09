@@ -192,10 +192,27 @@ done
 # LC 0:
 # corrupt/fat_not_fail_except_one
 
-# otool error:
-# fat/MachO-OSX-ppc-and-i386-bash
-# 32/MachO-OSX-ppc-openssl-1.0.1h
-# fat/audiodevice
+# nm fail:
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/test_wrong_lc_command_size                  ERROR: nm returned 1, ft_nm returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/bad_string_index                    ERROR: nm returned 0, ft_nm returned 1.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/fat_bad_string_index                ERROR: nm returned 0, ft_nm returned 1.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/fat_not_fail_except_one             ERROR: nm returned 1, ft_nm returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/indirect_bad_string                 ERROR: nm returned 0, ft_nm returned 1.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/mega_bad_string                     ERROR: nm returned 0, ft_nm returned 1.
+
+# otool fail:
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/test_half_obj                               ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/test_wrong_lc_command_size                  ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/32/MachO-OSX-ppc-openssl-1.0.1h             ERROR: otool returned 0, ft_otool returned 1.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/64_corrupted_string_table           ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/bad_string_index                    ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/fat_bad_string_index                ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/fat_not_fail_except_one             ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/indirect_bad_string                 ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/mega_bad_string                     ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/corrupt/truncated_cputype                   ERROR: otool returned 1, ft_otool returned 0.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/fat/audiodevice                             ERROR: otool returned 0, ft_otool returned 1.
+# + /Users/osamoile/unit_test_nm_otool/custom_tests/fat/MachO-OSX-ppc-and-i386-bash             ERROR: otool returned 0, ft_otool returned 1.
 
 # Different error message:
 # test_half_obj
