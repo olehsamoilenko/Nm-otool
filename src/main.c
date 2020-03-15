@@ -201,7 +201,7 @@ int parse_file(char *file_name, t_data *data)
 	data->len = stat.st_size;
 	data->filename = file_name;
 
-	char *label;
+	char *label = "";
 	if (OTOOL)
 		label = ft_strjoin(file_name, ":\n");
 	int res = parse_object(data, 0, label);
@@ -265,6 +265,7 @@ bool get_flags(t_data *data, int argc, char **argv)
 	return (true);
 }
 
+// TODO: fix leaks
 int main(int argc, char **argv)
 {
 	t_data data;

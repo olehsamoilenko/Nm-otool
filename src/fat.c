@@ -128,15 +128,21 @@ int parse_fat(t_data *data)
 			char *label = "";
 			if (show_all)
 			{
-				label = ft_strjoin(data->filename, " (");
-				if (NM)
+				char *arch = get_arch_name(cputype, cpusubtype);
+				if (*arch || NM)
 				{
-					label = ft_strjoin("\n", label);
-					label = ft_strjoin(label, "for ");
+					label = ft_strjoin(data->filename, " (");
+					if (NM)
+					{
+						label = ft_strjoin("\n", label);
+						label = ft_strjoin(label, "for ");
+					}
+					label = ft_strjoin(label, "architecture ");
+					label = ft_strjoin(label, get_arch_name(cputype, cpusubtype));
+					label = ft_strjoin(label, "):\n");
 				}
-				label = ft_strjoin(label, "architecture ");
-				label = ft_strjoin(label, get_arch_name(cputype, cpusubtype));
-				label = ft_strjoin(label, "):\n");
+				else
+					label = ft_strjoin(data->filename, ":\n");
 			}
 			else if (OTOOL)
 				label = ft_strjoin(data->filename, ":\n");

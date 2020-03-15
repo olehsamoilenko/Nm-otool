@@ -11,13 +11,32 @@
 /* ************************************************************************** */
 
 #include "nm.h"
+#define ERR_CMDSIZE "truncated or malformed object (load command cmdsize not a multiple of "
+
+void print_error(char *str)
+{
+	write(STDERR_FILENO, str, ft_strlen(str));
+}
 
 int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset, cpu_type_t cputype)
 {
 	const uint32_t cmd_seg = data->is64 ? LC_SEGMENT_64 : LC_SEGMENT;
+    uint32_t cmdsize = ntoh(data->cigam, lc->cmdsize);
+    const uint8_t multiple_of = data->is64 ? 8 : 4;
 
+    if (DEBUG)
+        ft_printf("[LC] cmdsize: %d\n", cmdsize);
+    if (cmdsize % multiple_of != 0)
+    {
+		char *num_str = ft_itoa(multiple_of);
+		char *err_msg = ft_strjoin(ERR_CMDSIZE, num_str);
+		err_msg = ft_strjoin(err_msg, ")\n");
+		print_error(err_msg);
+        return (EXIT_FAILURE);
+    }
 	if (lc->cmd == cmd_seg || ntoh(data, lc->cmd) == cmd_seg) // wtf ?
 	{
+
 		if (DEBUG)
 			ft_printf("[LC] cmd: SEGMENT\n");
 		int res = parse_segment(data, offset, global_offset, cputype);

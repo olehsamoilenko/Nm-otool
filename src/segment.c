@@ -34,7 +34,17 @@ int parse_section(t_data *data, void *section, int gl_offset, cpu_type_t cputype
 											:	((struct section *)section)->offset;
 			uint64_t addr = data->is64		?	((struct section_64 *)section)->addr
 											:	((struct section *)section)->addr;
-			
+            offset = ntoh(data->cigam, offset);
+            if (data->is64)
+            {
+
+            }
+            else
+            {
+                addr = ntoh(data->cigam, addr);
+                size = ntoh(data->cigam, size); // 64 ?
+            }
+
 			ft_printf("Contents of (%s,%s) section", segname, sectname);
 			void *text = get(*data, offset + gl_offset, size);
 
@@ -67,7 +77,7 @@ int parse_section(t_data *data, void *section, int gl_offset, cpu_type_t cputype
 					}
 					if (use_bunch)
 					{
-						ft_printf("%08x", *(uint32_t *)text);
+						ft_printf("%08x", ntoh(data->cigam, *(uint32_t *)text));
 						text += 4;
 					}
 					else
