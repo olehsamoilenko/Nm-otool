@@ -17,13 +17,12 @@ char define_type(uint8_t n_type, uint8_t n_sect, uint64_t n_value, t_data data)
 	const uint8_t type = n_type & N_TYPE;
 	uint8_t res;
 
-	if (/*(type != N_ABS && type != N_SECT && type != N_INDR && type != N_UNDF) || */n_type & N_STAB)
-	{
+	/*(type != N_ABS && type != N_SECT && type != N_INDR && type != N_UNDF) || */
+	if (n_type & N_STAB)
 		res = 0;
-	}
-	else if (type == N_UNDF && n_value)
+	else if (n_type && type == N_UNDF && n_value)
 		res = 'c';
-	else if (type == N_UNDF)
+	else if (n_type && type == N_UNDF)
 		res = 'u';
 	else if (type == N_ABS)
 		res = 'a';
@@ -33,12 +32,12 @@ char define_type(uint8_t n_type, uint8_t n_sect, uint64_t n_value, t_data data)
 		res = 'd';
 	else if (type == N_SECT && n_sect == data.bss_section_number)
 		res = 'b';
+	else if (type == N_SECT)
+		res = 's';
 	else if (type == N_INDR)
 		res = 'i';
-	else // is N_SECT
-	{
-		res = 's';
-	}
+	else
+		res = '?';
 
 	if (n_type & N_EXT)
 		res = ft_toupper(res);
@@ -57,8 +56,6 @@ void sort_symbols(t_symbol *symbols, uint32_t nsyms, t_data data)
 		{
 			bool swap = false;
 			int diff_str = ft_strcmp(symbols[i].str, symbols[j].str);
-			int64_t diff_adr = symbols[i].n_value - symbols[j].n_value;
-
 			// if (data.flag_n)
 			// {
 			// 	if (define_type(symbols[i].n_type, symbols[i].n_sect, symbols[i].n_value, data) == 'U'
@@ -68,7 +65,7 @@ void sort_symbols(t_symbol *symbols, uint32_t nsyms, t_data data)
 			// }
 			// else
 			// {
-				if (diff_str < 0 || (diff_str == 0 && diff_adr < 0))
+				if (diff_str < 0 || (diff_str == 0 && symbols[i].n_value < symbols[j].n_value))
 					swap = true;
 			// }
 			if (data.flag_r)
@@ -115,8 +112,8 @@ int parse_symbol(t_data *data, uint32_t offset, uint32_t stroff, t_symbol *symbo
 	if (symbol->str == NULL)
 	{
 		if (DEBUG)
-			ft_printf("[SYMBOL] failed: str null\n");
-		return (EXIT_FAILURE);
+			ft_printf("[SYMBOL] bad string index\n");
+		symbol->str = "bad string index";
 	}
 
 	return (EXIT_SUCCESS);

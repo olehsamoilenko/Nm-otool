@@ -163,20 +163,7 @@ else
 	prefix=""
 fi
 
-otool="otool -t" # ../UNIT_Factory/Nm-otool/ft_otool
-for filename in "${otool_correct[@]}"; do
-	./ft_otool $prefix$filename > /tmp/diff
-	$otool $prefix$filename > /tmp/diff2
-	res=$(diff /tmp/diff /tmp/diff2)
-	if [[ ${res} = "" ]]; then
-		printf "${GREEN}OTOOL: $filename: OK\n"
-	else
-		printf "${RED}OTOOL: $filename: KO\n${res}\n"
-	fi
-	printf "${NC}"
-done
-
-nm="nm" # ../UNIT_Factory/Nm-otool/ft_nm
+nm="/home/osamoilenko/projects/nm/pkolomiy/ft_nm"
 for filename in "${nm_correct[@]}"; do
 	./ft_nm $prefix$filename > /tmp/diff
 	$nm $prefix$filename > /tmp/diff2
@@ -185,6 +172,19 @@ for filename in "${nm_correct[@]}"; do
 		printf "${GREEN}NM: $filename: OK\n"
 	else
 		printf "${RED}NM: $filename: KO\n${res}\n"
+	fi
+	printf "${NC}"
+done
+
+otool="/home/osamoilenko/projects/nm/pkolomiy/ft_otool"
+for filename in "${otool_correct[@]}"; do
+	./ft_otool $prefix$filename > /tmp/diff
+	$otool $prefix$filename > /tmp/diff2
+	res=$(diff /tmp/diff /tmp/diff2)
+	if [[ ${res} = "" ]]; then
+		printf "${GREEN}OTOOL: $filename: OK\n"
+	else
+		printf "${RED}OTOOL: $filename: KO\n${res}\n"
 	fi
 	printf "${NC}"
 done
