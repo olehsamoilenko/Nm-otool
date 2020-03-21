@@ -76,6 +76,7 @@ void *get(t_data data, size_t offset, size_t size);
 uint16_t ntoh16(bool cigam, uint16_t nbr);
 uint32_t ntoh(bool cigam, uint32_t nbr);
 uint64_t ntoh64(bool cigam, uint64_t nbr);
+void		print_error(char *str);
 
 int parse_object(t_data *data, uint32_t offset, char *label);
 int parse_fat(t_data *data);

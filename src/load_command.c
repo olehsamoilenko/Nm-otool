@@ -12,10 +12,16 @@
 
 #include "nm.h"
 #define ERR_CMDSIZE "truncated or malformed object (load command cmdsize not a multiple of "
+#define ERR_CMD0 "truncated or malformed object (load command extends past the end all load command in the file)"
 
 void print_error(char *str)
 {
+	if (NM)
+		write(STDERR_FILENO, "./ft_nm: ", 9);
+	else if (OTOOL)
+		write(STDERR_FILENO, "./ft_otool: ", 12);
 	write(STDERR_FILENO, str, ft_strlen(str));
+	write(STDERR_FILENO, "\n", 1);
 }
 
 int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, uint32_t global_offset, cpu_type_t cputype)
@@ -30,7 +36,7 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
     {
 		char *num_str = ft_itoa(multiple_of);
 		char *err_msg = ft_strjoin(ERR_CMDSIZE, num_str);
-		err_msg = ft_strjoin(err_msg, ")\n");
+		err_msg = ft_strjoin(err_msg, ")");
 		print_error(err_msg);
         return (EXIT_FAILURE);
     }
@@ -91,8 +97,11 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 			sort_symbols(symbols, ntoh(data->cigam, sym_cmd->nsyms), *data);
 		print_symbols(*data, symbols, ntoh(data->cigam, sym_cmd->nsyms));
 	}
-	else if (lc->cmd == 0 && DEBUG)
-		ft_printf("[LC] cmd: 0, failed\n");
+	else if (lc->cmd == 0)
+	{
+		print_error(ERR_CMD0);
+		return (EXIT_FAILURE);
+	}
 	else if (DEBUG)
 		ft_printf("[LC] skip cmd: %d\n", ntoh(data->cigam, lc->cmd));
 

@@ -86,9 +86,9 @@ int parse_fat(t_data *data)
 									
 	bool cigam = data->cigam;
 	bool is64 = data->is64;
-	int res = EXIT_SUCCESS;
 
 	bool show_all = show_all_enabled(narchs, data, offset, arch_size);
+	int res = EXIT_SUCCESS;
 	while (narchs)
 	{
 		void *arch = get(*data, offset, arch_size);
@@ -147,12 +147,11 @@ int parse_fat(t_data *data)
 			else if (OTOOL)
 				label = ft_strjoin(data->filename, ":\n");
 
-			res = parse_object(data, arch_offset, label);
+			res |= parse_object(data, arch_offset, label);
 			if (res == EXIT_FAILURE)
 			{
 				if (DEBUG)
 					ft_printf("[FAT] parse object failed\n");
-				return (EXIT_FAILURE);
 			}
 		}
 		else if (DEBUG)
