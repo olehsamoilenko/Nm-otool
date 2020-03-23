@@ -12,6 +12,10 @@
 
 #include "nm.h"
 
+// TODO2: LC_SEGMENT_64 (corrupt/64_corrupted_string_table)
+#define ERR_SYM	"truncated or malformed object (load command fileoff field plus\
+ filesize field extends past the end of the file)"
+
 char define_type(uint8_t n_type, uint8_t n_sect, uint64_t n_value, t_data data)
 {
 	const uint8_t type = n_type & N_TYPE;
@@ -87,7 +91,10 @@ int parse_symbol(t_data *data, uint32_t offset, uint32_t stroff, t_symbol *symbo
 										: sizeof(struct nlist);
 	void *sym = get(*data, offset, sym_size);
 	if (sym == NULL)
+	{
+		print_error(ERR_SYM);
 		return (EXIT_FAILURE);
+	}
 
 	symbol->n_type = data->is64		? ((struct nlist_64 *)sym)->n_type
 									: ((struct nlist *)sym)->n_type;

@@ -11,7 +11,9 @@
 /* ************************************************************************** */
 
 #include "nm.h"
+// TODO2: load command %d (test_wrong_lc_command_size)
 #define ERR_CMDSIZE "truncated or malformed object (load command cmdsize not a multiple of "
+// TODO2: load command %d
 #define ERR_CMD0 "truncated or malformed object (load command extends past the end all load command in the file)"
 
 void print_error(char *str)
@@ -53,7 +55,7 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 			return (EXIT_FAILURE);
 		}
 	}
-	else if (NM && ntoh(data->cigam, lc->cmd) == LC_SYMTAB)
+	else if (ntoh(data->cigam, lc->cmd) == LC_SYMTAB)
 	{
 		// NM only
 		struct symtab_command *sym_cmd = get(*data, offset, sizeof(struct symtab_command));
@@ -93,9 +95,12 @@ int parse_load_command(t_data *data, struct load_command *lc, uint32_t offset, u
 			nsyms--;
 		}
 
-		if (!data->flag_p)
-			sort_symbols(symbols, ntoh(data->cigam, sym_cmd->nsyms), *data);
-		print_symbols(*data, symbols, ntoh(data->cigam, sym_cmd->nsyms));
+		if (NM)
+		{
+			if (!data->flag_p)
+				sort_symbols(symbols, ntoh(data->cigam, sym_cmd->nsyms), *data);
+			print_symbols(*data, symbols, ntoh(data->cigam, sym_cmd->nsyms));
+		}
 	}
 	else if (lc->cmd == 0)
 	{
