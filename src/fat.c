@@ -12,6 +12,10 @@
 
 #include "nm.h"
 
+// TODO2: cputype, cpusubtype
+#define ERR_ARCHOFFSET "truncated of malformed fat file (offset plus size of \
+cputype cpusubtype extends past the end of the file)"
+
 bool show_all_enabled(uint32_t narchs, const t_data *data, uint32_t offset, uint32_t arch_size)
 {
 	bool res = true;
@@ -108,6 +112,8 @@ int parse_fat(t_data *data)
 										: ((struct fat_arch *)arch)->cputype;
 		cpu_subtype_t cpusubtype = data->is64 ? ((struct fat_arch_64 *)arch)->cpusubtype
 										      : ((struct fat_arch *)arch)->cpusubtype;
+		uint64_t size = data->is64 ?	((struct fat_arch_64 *)arch)->size
+										: ((struct fat_arch *)arch)->size;
 
 		if (data->cigam) {
 			arch_offset = SWAP_32(arch_offset); // TODO: 64
@@ -117,10 +123,19 @@ int parse_fat(t_data *data)
 			// works ?
 			// char *test = &(cpusubtype);
 			// ft_printf("%x %x %x %x\n", test[0], test[1], test[2], test[3]);
+			if (data->is64)
+				size = SWAP_64(size);
+			else
+				size = SWAP_32(size);
 		}
 		
 		if (DEBUG)
 			ft_printf("[FAT] arch offset: %d, cputype: %d, cpusubtype: %d\n", arch_offset, cputype, cpusubtype);
+		if (get(*data, arch_offset + size, 0) == NULL)
+		{
+			print_error(ERR_ARCHOFFSET);
+			return (EXIT_FAILURE);
+		}
 
 		if (show_all
 			|| (cputype == CPU_TYPE_X86_64 && cpusubtype == CPU_SUBTYPE_X86_64_ALL)) // wat ?
