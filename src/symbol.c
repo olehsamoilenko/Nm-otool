@@ -11,10 +11,14 @@
 /* ************************************************************************** */
 
 #include "nm.h"
+#include <stdio.h>
 
 // TODO2: LC_SEGMENT_64 (corrupt/64_corrupted_string_table)
 #define ERR_SYM	"truncated or malformed object (load command fileoff field plus\
  filesize field extends past the end of the file)"
+// TODO2: symbol index (corrupt/bad_string_index)
+#define ERR_STRINDEX "truncated or malformed object (bad string table index: \
+%u past the end of string table)"
 
 char define_type(uint8_t n_type, uint8_t n_sect, uint64_t n_value, t_data data)
 {
@@ -119,8 +123,15 @@ int parse_symbol(t_data *data, uint32_t offset, uint32_t stroff, t_symbol *symbo
 	if (symbol->str == NULL)
 	{
 		if (DEBUG)
-			ft_printf("[SYMBOL] bad string index\n");
+			ft_printf("[SYMBOL] parse symbol failed: bad string index\n");
 		symbol->str = "bad string index";
+		if (OTOOL)
+		{
+			char err[200];
+			sprintf(err, ERR_STRINDEX, symbol->n_strx);
+			print_error(err);
+			return (EXIT_FAILURE);
+		}
 	}
 
 	return (EXIT_SUCCESS);
