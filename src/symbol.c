@@ -13,10 +13,8 @@
 #include "nm.h"
 #include <stdio.h>
 
-// TODO2: LC_SEGMENT_64 (corrupt/64_corrupted_string_table)
 #define ERR_SYM "truncated or malformed object (load command fileoff field plus\
  filesize field extends past the end of the file)"
-// TODO2: symbol index (corrupt/bad_string_index)
 #define ERR_STRINDEX "truncated or malformed object (bad string table index: \
 %u past the end of string table)"
 
@@ -25,7 +23,6 @@ char define_type(uint8_t n_type, uint8_t n_sect, uint64_t n_value, t_data data)
     const uint8_t type = n_type & N_TYPE;
     uint8_t res;
 
-    /*(type != N_ABS && type != N_SECT && type != N_INDR && type != N_UNDF) || */
     if (n_type & N_STAB)
         res = 0;
     else if (n_type && type == N_UNDF && n_value)
@@ -62,18 +59,8 @@ void sort_symbols(t_symbol *symbols, uint32_t nsyms, t_data data)
         {
             bool swap = false;
             int diff_str = ft_strcmp(symbols[i].str, symbols[j].str);
-            // if (data.flag_n)
-            // {
-            //     if (define_type(symbols[i].n_type, symbols[i].n_sect, symbols[i].n_value, data) == 'U'
-            //         || diff_adr < 0
-            //         || (diff_adr == 0 && diff_str < 0))
-            //         swap = true;
-            // }
-            // else
-            // {
-                if (diff_str < 0 || (diff_str == 0 && symbols[i].n_value < symbols[j].n_value))
-                    swap = true;
-            // }
+            if (diff_str < 0 || (diff_str == 0 && symbols[i].n_value < symbols[j].n_value))
+                swap = true;
             if (data.flag_r)
                 swap = !swap;
             if (swap)
@@ -113,14 +100,9 @@ int parse_symbol(t_data *data, uint32_t offset, uint32_t stroff, t_symbol *symbo
     symbol->n_strx = data->is64 ? ((struct nlist_64 *)sym)->n_un.n_strx
                                 : ((struct nlist *)sym)->n_un.n_strx;
     symbol->n_strx = ntoh(data->cigam, symbol->n_strx);
-    symbol->str = get(*data, stroff + symbol->n_strx, 0); // use symbol->n_strx as index
-    if (DEBUG)
-        ft_printf("[SYMBOL] type: %2d, strx: %4d, str: %20s, nsect: %d, nvalue: %lu\n",
-            symbol->n_type, symbol->n_strx, symbol->str, symbol->n_sect, symbol->n_value);
+    symbol->str = get(*data, stroff + symbol->n_strx, 0);
     if (symbol->str == NULL)
     {
-        if (DEBUG)
-            ft_printf("[SYMBOL] parse symbol failed: bad string index\n");
         symbol->str = "bad string index";
         if (OTOOL)
         {
@@ -172,11 +154,6 @@ void print_symbols(t_data data, t_symbol *symbols, uint32_t nsyms)
                 }
             }
             ft_printf("%s\n", symbols[i].str);
-        }
-        else
-        {
-            if (DEBUG)
-                ft_printf("[SYMBOL] skip: %s, type: %d\n", symbols[i].str, type);
         }
     }
 }

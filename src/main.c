@@ -29,7 +29,7 @@ uint64_t ntoh64(bool cigam, uint64_t nbr)
     return (nbr);
 }
 
-uint16_t ntoh16(bool cigam, uint16_t nbr) // mb without it ?
+uint16_t ntoh16(bool cigam, uint16_t nbr)
 {
     if (cigam)
         nbr = SWAP_16(nbr);
@@ -52,11 +52,7 @@ int parse_mach_o(t_data *data, uint32_t offset, char *label)
     size_t header_size = data->is64 ? sizeof(struct mach_header_64) : sizeof(struct mach_header);
     void *header = get(*data, offset, header_size);
     if (header == NULL)
-    {
-        if (DEBUG)
-            ft_printf("[MACH-O] get header failed\n");
         return (EXIT_FAILURE);
-    }
     uint32_t ncmds = data->is64     ? ((struct mach_header_64 *)header)->ncmds
                                     : ((struct mach_header *)header)->ncmds;
     cpu_type_t cputype = data->is64 ? ((struct mach_header_64 *)header)->cputype
@@ -68,23 +64,13 @@ int parse_mach_o(t_data *data, uint32_t offset, char *label)
     data->data_section_number = 0;
     data->bss_section_number = 0;
     data->text_section_number = 0;
-    if (DEBUG)
-        ft_printf("[MACH-O] ncmds: %d\n", ncmds);
     while (ncmds)
     {
         struct load_command *lc = get(*data, offset, sizeof(struct load_command));
         if (lc == NULL)
-        {
-            if (DEBUG)
-                ft_printf("[MACH-O] get lc failed\n");
             return (EXIT_FAILURE);
-        }
         if (parse_load_command(data, lc, offset, fat_offset, cputype) == EXIT_FAILURE)
-        {
-            if (DEBUG)
-                ft_printf("[MACH-O] parse_load_command failed\n");
             return (EXIT_FAILURE);
-        }
         offset += ntoh(data->cigam, lc->cmdsize);
         ncmds--;
     }
@@ -96,81 +82,48 @@ int parse_object(t_data *data, uint32_t offset, char *label)
     int res = EXIT_FAILURE;
     void *m = get(*data, offset, sizeof(uint32_t));
     uint32_t magic;
+
     if (m)
         magic = *(uint32_t *)m;
     else
         magic = 0;
-    if (magic == 0)
+    if (magic == MH_MAGIC_64)
     {
-        if (DEBUG)
-            ft_printf("[MAGIC] failed: bad magic\n");
-    }
-    else if (magic == MH_MAGIC_64)
-    {
-        if (DEBUG)
-            ft_printf("[MAGIC] MH_MAGIC_64\n");
         data->is64 = true;
         data->cigam = false;
         res = parse_mach_o(data, offset, label);
     }
     else if (magic == MH_MAGIC)
     {
-        if (DEBUG)
-            ft_printf("[MAGIC] MH_MAGIC\n");
         data->is64 = false;
         data->cigam = false;
         res = parse_mach_o(data, offset, label);
     }
     else if (magic == MH_CIGAM)
     {
-        if (DEBUG)
-            ft_printf("[MAGIC] MH_CIGAM\n");
         data->is64 = false;
         data->cigam = true;
         res = parse_mach_o(data, offset, label);
     }
-    else if (magic == MH_CIGAM_64)
-    {
-        if (DEBUG)
-            ft_printf("[MAGIC] failed: MH_CIGAM_64\n");
-    }
-    else if (magic == FAT_MAGIC)
-    {
-        if (DEBUG)
-            ft_printf("[MAGIC] failed: FAT_MAGIC\n");
-    }
     else if (magic == FAT_CIGAM)
     {
-        if (DEBUG)
-            ft_printf("[MAGIC] FAT_CIGAM\n");
+
         data->is64 = false;
         data->cigam = true;
         res = parse_fat(data);
     }
-    else if (magic == FAT_CIGAM_64)
-    {
-        if (DEBUG)
-            ft_printf("[MAGIC] failed: FAT_CIGAM_64\n");
-    }
     else if (magic == *(uint32_t*)ARMAG)
-    {
-        if (DEBUG)
-            ft_printf("[MAGIC] ARCHIVE\n");
         res = parse_archive(data, offset);
-    }
-    else
-    {
-        if (DEBUG)
-            ft_printf("[MAGIC] failed: Other\n");
-    }
+
     return (res);
 }
 
 int parse_file(char *file_name, t_data *data)
 {
-    int            fd;
-    struct stat    stat;
+    int         fd;
+    struct stat stat;
     void        *data_ptr;
+
     if ((fd = open(file_name, O_RDONLY)) == -1)
         return (EXIT_FAILURE);
     if (fstat(fd, &stat) == -1)
@@ -196,6 +149,7 @@ int parse_file(char *file_name, t_data *data)
 bool store_flag(char flag, t_data *data)
 {
     const char *alailable = "nprjx";
+
     if (ft_strchr(alailable, flag) == NULL)
     {
         ft_printf("ft_nm: Unknown argument '-%c'. Please use: '-%s'\n", flag, alailable);
@@ -224,17 +178,12 @@ bool get_flags(t_data *data, int argc, char **argv)
     int i = 0;
     while (++i < argc)
     {
-        if (argv[i][0] == '-') // check nm
+        if (argv[i][0] == '-')
         {
             int j = 0;
             while (argv[i][++j])
             {
-                if (store_flag(argv[i][j], data))
-                {
-                    if (DEBUG)
-                        ft_printf("[ARGV] flag: %c\n", argv[i][j]);
-                }
-                else
+                if (!store_flag(argv[i][j], data))
                     return (false);
             }
         }
@@ -242,7 +191,6 @@ bool get_flags(t_data *data, int argc, char **argv)
     return (true);
 }
 
-// TODO: fix leaks
 int main(int argc, char **argv)
 {
     t_data data;
@@ -250,26 +198,13 @@ int main(int argc, char **argv)
     ft_bzero(&data, sizeof(t_data));
     if (get_flags(&data, argc, argv) == false)
         return (EXIT_FAILURE);
-    if (argc == 1)
+    int i = 0;
+    while (++i < argc)
     {
-        // a.out
-    }
-    else
-    {
-        int i = 0;
-        while (++i < argc)
+        if (argv[i][0] != '-')
         {
-            if (argv[i][0] != '-')
-            {
-                if (DEBUG)
-                    ft_printf("[ARGV] parse file: %s\n", argv[i]);
-                if (parse_file(argv[i], &data) == EXIT_FAILURE)
-                {
-                    res = EXIT_FAILURE;
-                    if (DEBUG)
-                        ft_printf("[ARGV] parse failed: %s\n", argv[i]);
-                }
-            }
+            if (parse_file(argv[i], &data) == EXIT_FAILURE)
+                res = EXIT_FAILURE;
         }
     }
     return (res);
